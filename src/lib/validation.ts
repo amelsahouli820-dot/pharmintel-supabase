@@ -7,7 +7,12 @@ export const createUserSchema = z.object({
   role: z.enum(["ADMIN", "USER"]).default("USER"), temporaryPassword: z.string().min(12).max(128),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean() }).default({ canImport: true, canUseAI: true, canExport: true })
 });
+export const registrationSchema = z.object({
+  name: z.string().trim().min(2, "Le nom est trop court").max(100),
+  email: z.string().email("Adresse e-mail invalide").max(254).transform(v => v.toLowerCase().trim())
+});
+
 export const updateUserSchema = z.object({
-  name: z.string().trim().min(2).max(100).optional(), role: z.enum(["ADMIN", "USER"]).optional(), status: z.enum(["ACTIVE", "SUSPENDED"]).optional(),
+  name: z.string().trim().min(2).max(100).optional(), role: z.enum(["ADMIN", "USER"]).optional(), status: z.enum(["PENDING", "ACTIVE", "SUSPENDED"]).optional(),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean() }).optional(), temporaryPassword: z.string().min(12).max(128).optional()
 });

@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, BrainCircuit, LineChart, CheckCircle2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, BrainCircuit, LineChart, CheckCircle2, AlertCircle, UserPlus } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter(); const [show, setShow] = useState(false); const [loading, setLoading] = useState(false); const [error, setError] = useState("");
@@ -31,6 +31,7 @@ export default function LoginPage() {
       <div className="field login-field"><div className="label-row"><label htmlFor="password">Mot de passe / code d’activation</label></div><div className="input-icon"><LockKeyhole size={17}/><input id="password" name="password" type={show ? "text" : "password"} placeholder="••••••••••••" autoComplete="current-password" required minLength={8}/><button type="button" onClick={() => setShow(!show)} aria-label="Afficher le mot de passe">{show ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></div>
       <button className="login-submit" disabled={loading}>{loading ? <span className="spinner"/> : <>Se connecter <span>→</span></>}</button>
       <div className="access-note"><ShieldCheck size={16}/><p><strong>Accès sur autorisation uniquement</strong><small>Votre compte doit être créé et validé par l’administrateur.</small></p></div>
+      <a className="registration-link" href="/inscription"><UserPlus size={15}/> Demander un accès collaborateur</a>
       <div className="security-line"><CheckCircle2 size={13}/> Connexion chiffrée et sécurisée</div>
     </form><footer>© {new Date().getFullYear()} PharmIntel <span>•</span> Plateforme de veille concurrentielle</footer></section>
   </main>;

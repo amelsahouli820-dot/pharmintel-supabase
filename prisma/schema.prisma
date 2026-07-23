@@ -14,6 +14,7 @@ enum Role {
 }
 
 enum UserStatus {
+  PENDING
   ACTIVE
   SUSPENDED
 }
@@ -41,6 +42,7 @@ enum AlertType {
   HIGH_DISCOUNT
   NEW_PRODUCT
   PROCESSING_FAILED
+  USER_REGISTRATION_REQUEST
 }
 
 enum AlertSeverity {

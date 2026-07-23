@@ -15,7 +15,10 @@ export async function PATCH(request: NextRequest, context: Context) {
   const parsed = updateUserSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return badRequest(parsed.error.issues[0]?.message || "Informations invalides.");
   if (id === admin.id && (parsed.data.status === "SUSPENDED" || parsed.data.role === "USER")) return badRequest("Vous ne pouvez pas retirer vos propres droits administrateur.");
+  const current = await db.user.findUnique({ where: { id }, select: { status: true } });
+  if (!current) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
   const { temporaryPassword, ...changes } = parsed.data;
+  if (current.status === "PENDING" && changes.status === "ACTIVE" && !temporaryPassword) return badRequest("Définissez un mot de passe temporaire avant d’autoriser ce compte.");
   const user = await db.user.update({ where: { id }, data: { ...changes, ...(temporaryPassword ? { passwordHash: await bcrypt.hash(temporaryPassword, 12), mustChangePassword: true, sessionVersion: { increment: 1 } } : {}),
       ...(changes.status === "SUSPENDED" && !temporaryPassword ? { sessionVersion: { increment: 1 } } : {}) } }).catch(() => null);
   if (!user) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });

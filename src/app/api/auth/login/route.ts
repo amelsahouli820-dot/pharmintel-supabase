@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     await audit(user?.id || null, "LOGIN_FAILED", "Session", undefined, { email: parsed.data.email }, ip);
     return NextResponse.json({ error: "Adresse e-mail ou mot de passe incorrect." }, { status: 401 });
   }
+  if (user.status === "PENDING") return NextResponse.json({ error: "Votre demande est en attente de validation par l’administrateur." }, { status: 403 });
   if (user.status !== "ACTIVE") return NextResponse.json({ error: "Ce compte n’est pas autorisé. Contactez l’administrateur." }, { status: 403 });
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await createSession(user);
