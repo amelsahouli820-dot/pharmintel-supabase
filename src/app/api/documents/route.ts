@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const sha256 = createHash("sha256").update(buffer).digest("hex");
   const duplicate = await db.document.findFirst({ where: { userId: user.id, sha256, status: { in: ["WAITING_AI", "PENDING", "PROCESSING", "COMPLETED"] } }, select: { id: true } });
-  if (duplicate) return NextResponse.json({ error: "Ce document a déjà été importé.", documentId: duplicate.id }, { status: 409 });
+  if (duplicate) { await db.scoreEvent.create({ data: { userId: user.id, documentId: duplicate.id, points: -5, reason: "DUPLICATE_DOCUMENT", details: file.name } }).catch(()=>undefined); return NextResponse.json({ error: "Ce document a déjà été importé. Une pénalité de 5 points a été appliquée.", documentId: duplicate.id }, { status: 409 }); }
   const safeName = file.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-").slice(-120);
   const key = `${user.id}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
   try { await putFile(key, buffer, file.type || "application/octet-stream"); }
@@ -56,11 +56,12 @@ export async function POST(request: NextRequest) {
   const toDate = (value: string) => value ? new Date(`${value}T12:00:00.000Z`) : null;
   const document = await db.document.create({ data: {
     userId: user.id, originalName: file.name.slice(0, 255), storageKey: key, mimeType: file.type || "application/octet-stream", size: file.size, sha256,
-    status: aiReady ? "PENDING" : "WAITING_AI", reviewStatus: "PENDING_AI",
+    status: aiReady ? "PENDING" : "WAITING_AI", reviewStatus: aiReady ? "PENDING_AI" : "PENDING",
     wholesaler: m.wholesaler === "OTHER" ? m.customWholesaler : m.wholesaler, customWholesaler: m.wholesaler === "OTHER" ? m.customWholesaler : null,
     documentType: m.documentType, customDocumentType: m.documentType === "OTHER" ? m.customDocumentType : null,
     documentDate: toDate(m.documentDate), receivedAt: toDate(m.receivedAt) || new Date(), region: m.region || null, laboratory: m.laboratory || null,
     comments: m.comments || null, confidentiality: m.confidentiality, priority: m.priority,
+    scoreEvents: { create: [{ userId: user.id, points: 10, reason: "DOCUMENT_IMPORTED", details: file.name }, ...((m.wholesaler && m.documentType && m.documentDate && m.region && m.laboratory) ? [{ userId: user.id, points: 10, reason: "COMPLETE_INFORMATION", details: "Métadonnées complètes" }] : [])] },
     ...(aiReady ? { processingJob: { create: { status: "QUEUED" } } } : {})
   } });
   await audit(user.id, "DOCUMENT_UPLOADED", "Document", document.id, { name: document.originalName, size: document.size, wholesaler: document.wholesaler, documentType: document.documentType, aiQueued: aiReady }, clientIp(request));

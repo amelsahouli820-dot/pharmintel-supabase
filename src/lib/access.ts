@@ -6,7 +6,7 @@ export function canManageUsers(user: Actor) { return user.role === "ADMIN"; }
 export function canViewAudit(user: Actor) { return user.role === "ADMIN"; }
 export function canValidateDocuments(user: Actor) { return user.role === "ADMIN" || user.role === "SUPERVISOR"; }
 export function canImportDocuments(user: Actor) { return user.role === "ADMIN" || user.role === "DELEGATE"; }
-export function canEditDocument(user: Actor, ownerId: string) { return user.role === "ADMIN" || (user.role === "DELEGATE" && user.id === ownerId); }
+export function canEditDocument(user: Actor, ownerId: string, ownerSupervisorId?: string | null) { return user.role === "ADMIN" || (user.role === "SUPERVISOR" && ownerSupervisorId === user.id) || (user.role === "DELEGATE" && user.id === ownerId); }
 export function canDeleteDocument(user: Actor, ownerId: string, explicitPermission = true) { return user.role === "ADMIN" || (user.role === "DELEGATE" && user.id === ownerId && explicitPermission); }
 export function documentScope(user: Actor): Prisma.DocumentWhereInput {
   if (hasGlobalVision(user)) return {};

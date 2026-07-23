@@ -63,9 +63,18 @@ enum PriorityLevel {
 }
 
 enum ReviewStatus {
+  PENDING
   PENDING_AI
   NEEDS_REVIEW
+  MODIFIED
   VALIDATED
+  REJECTED
+  ARCHIVED
+}
+
+enum InformationSourceKind {
+  FILE
+  MANUAL
 }
 
 enum OfferType {
@@ -85,6 +94,10 @@ enum AlertType {
   NEW_PRODUCT
   PROCESSING_FAILED
   USER_REGISTRATION_REQUEST
+  NEW_FIELD_INFORMATION
+  DOCUMENT_VALIDATED
+  DOCUMENT_REJECTED
+  DOCUMENT_MODIFIED
 }
 
 enum AlertSeverity {
@@ -121,6 +134,10 @@ model User {
   records            IntelligenceRecord[]
   alerts             Alert[]
   auditLogs          AuditLog[]   @relation("AuditActor")
+  attachments        Attachment[]
+  documentComments   DocumentComment[]
+  scoreEvents        ScoreEvent[] @relation("ScoreRecipient")
+  awardedScoreEvents ScoreEvent[] @relation("ScoreAwarder")
 
   @@index([status, role])
   @@index([supervisorId])
@@ -137,7 +154,11 @@ model Document {
   size         Int
   sha256       String
   status       DocumentStatus          @default(PENDING)
-  reviewStatus ReviewStatus             @default(PENDING_AI)
+  reviewStatus ReviewStatus             @default(PENDING)
+  sourceKind   InformationSourceKind    @default(FILE)
+  fieldSource  String?
+  confidenceLevel Int?
+  isStrategic  Boolean                  @default(false)
   wholesaler   String?
   customWholesaler String?
   documentType DocumentType             @default(OTHER)
@@ -156,6 +177,9 @@ model Document {
   updatedAt    DateTime                @updatedAt
   records      IntelligenceRecord[]
   processingJob ProcessingJob?
+  attachments  Attachment[]
+  documentComments DocumentComment[]
+  scoreEvents  ScoreEvent[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -177,6 +201,53 @@ model ProcessingJob {
 
   @@index([status, createdAt])
   @@map("processing_jobs")
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  originalName String
+  storageKey   String   @unique
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  @@index([documentId, createdAt])
+  @@map("attachments")
+}
+
+model DocumentComment {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([documentId, createdAt])
+  @@map("document_comments")
+}
+
+model ScoreEvent {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation("ScoreRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  awardedById String?
+  awardedBy   User?     @relation("ScoreAwarder", fields: [awardedById], references: [id], onDelete: SetNull)
+  points      Int
+  reason      String
+  details     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([documentId])
+  @@map("score_events")
 }
 
 model IntelligenceRecord {

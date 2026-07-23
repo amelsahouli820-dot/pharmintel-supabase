@@ -1,21 +1,20 @@
-PHARMINTEL V2 — PHASE 1 : IMPORT INTELLIGENT ET STABILISATION
+PHARMINTEL V2 — PHASE 3
+COLLECTE TERRAIN, WORKFLOW, TABLEAUX SANS IA, PERFORMANCE ET GAMIFICATION
 
-1. GitHub > dépôt pharmintel-supabase > Add file > Upload files.
-2. Glisser les dossiers prisma et src de ce paquet.
-3. Attendre puis cliquer Commit changes.
-4. Render redéploie automatiquement. Vérifier le statut Live.
-5. Actualiser le site avec Ctrl+F5.
+Déploiement : GitHub > Add file > Upload files > glisser prisma et src > Commit changes.
+Render redéploie automatiquement.
 
-Fonctions ajoutées :
-- métadonnées obligatoires Grossiste et Type de document ;
-- dates, région, laboratoire, commentaire, confidentialité, priorité ;
-- import multiple et 3 tentatives en cas de coupure ;
-- raison précise d’échec et bouton Relancer ;
-- stockage des documents même lorsque l’IA n’est pas financée ;
-- statut En attente IA au lieu d’un échec ;
-- extraction enrichie : gamme, molécule, classe, codes, CIP, prix HT/TTC/promo,
-  unités gratuites, quota, conditions, dates, ville, commercial et canal ;
-- recherche et exports enrichis ;
-- correction de l’origine Render et inscription collaborateurs conservée.
+Nouveautés :
+- Nouvelle information terrain sans document et sans IA ;
+- photos éventuelles et source de l’information ;
+- statuts En attente, Modifiée, Validée, Rejetée, Archivée ;
+- validation, rejet motivé, commentaire et historique ;
+- notifications au propriétaire ;
+- tableaux de bord alimentés directement par les documents et saisies manuelles ;
+- score automatique : import +10, terrain +8, validation +15, stratégique +20,
+  information complète +10, photo +5, doublon -5, rejet -10 ;
+- classement, taux de validation, activité et progression mensuelle ;
+- rôles et isolation RBAC de la Phase 2 inclus ;
+- journal d’audit administrateur.
 
-L’IA restera en attente jusqu’à l’ajout d’une clé OpenAI active et créditée.
+Build Next.js et TypeScript strict vérifiés avant livraison.

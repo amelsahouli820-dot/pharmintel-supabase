@@ -8,11 +8,11 @@ import { documentUpdateSchema } from "@/lib/validation";
 type Context={params:Promise<{id:string}>};
 export async function PATCH(request:NextRequest,{params}:Context){
  if(!assertSameOrigin(request))return forbidden();const user=await requireApiUser();if(!user)return unauthorized();const{id}=await params;
- const document=await db.document.findUnique({where:{id},select:{id:true,userId:true}});if(!document)return NextResponse.json({error:"Document introuvable."},{status:404});
- if(!canEditDocument(user,document.userId)||!permissionsOf(user.permissions).canEditOwn&&user.role!=="ADMIN")return forbidden();
+ const document=await db.document.findUnique({where:{id},select:{id:true,userId:true,reviewStatus:true,user:{select:{supervisorId:true}}}});if(!document)return NextResponse.json({error:"Document introuvable."},{status:404});
+ if(!canEditDocument(user,document.userId,document.user.supervisorId)||(!permissionsOf(user.permissions).canEditOwn&&user.role==="DELEGATE"))return forbidden();if(user.role==="DELEGATE"&&["VALIDATED","REJECTED","ARCHIVED"].includes(document.reviewStatus))return badRequest("Ce document ne peut plus être modifié après validation ou rejet.");
  const parsed=documentUpdateSchema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return badRequest(parsed.error.issues[0]?.message||"Métadonnées invalides.");
  const data={...parsed.data,documentDate:parsed.data.documentDate?new Date(`${parsed.data.documentDate}T12:00:00Z`):parsed.data.documentDate===null?null:undefined,receivedAt:parsed.data.receivedAt?new Date(`${parsed.data.receivedAt}T12:00:00Z`):parsed.data.receivedAt===null?null:undefined};
- const updated=await db.document.update({where:{id},data});await audit(user.id,"DOCUMENT_UPDATED","Document",id,{fields:Object.keys(parsed.data)},clientIp(request));return NextResponse.json({document:updated});
+ const updated=await db.document.update({where:{id},data:{...data,reviewStatus:"MODIFIED"}});if(user.id!==document.userId)await db.alert.create({data:{userId:document.userId,type:"DOCUMENT_MODIFIED",severity:"INFO",title:"Document modifié",message:updated.originalName}});await audit(user.id,"DOCUMENT_UPDATED","Document",id,{fields:Object.keys(parsed.data)},clientIp(request));return NextResponse.json({document:updated});
 }
 export async function DELETE(request:NextRequest,{params}:Context){
  if(!assertSameOrigin(request))return forbidden();const user=await requireApiUser();if(!user)return unauthorized();const{id}=await params;

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
 
 type Role = "ADMIN"|"DIRECTOR_GENERAL"|"SUPERVISOR"|"DELEGATE";
@@ -10,15 +10,21 @@ type User = { id: string; name: string; email: string; role: Role };
 const roleLabels:Record<Role,string>={ADMIN:"Administrateur",DIRECTOR_GENERAL:"Directeur Général",SUPERVISOR:"Superviseur",DELEGATE:"Délégué"};
 const links = [
   { href: "/tableau-de-bord", label: "Vue d’ensemble", icon: LayoutDashboard },
-  { href: "/imports", label: "Importer", icon: UploadCloud },
+  { href: "/imports", label: "Documents", icon: UploadCloud },
+  { href: "/nouvelle-information", label: "Nouvelle information", icon: PlusCircle },
   { href: "/veille", label: "Données de veille", icon: Database },
+  { href: "/performances", label: "Performances", icon: Trophy },
   { href: "/assistant", label: "Assistant IA", icon: Sparkles },
   { href: "/alertes", label: "Alertes", icon: Bell }
 ];
 
 export function AppShell({ user, children }: { user: User; children: React.ReactNode }) {
   const pathname = usePathname(); const router = useRouter();
-  const visibleLinks = links.filter(link => link.href !== "/imports" || user.role !== "DIRECTOR_GENERAL");
+  const visibleLinks = links.filter(link => {
+    if (link.href === "/imports") return user.role !== "DIRECTOR_GENERAL";
+    if (link.href === "/nouvelle-information") return user.role === "ADMIN" || user.role === "DELEGATE";
+    return true;
+  });
   const [mobile, setMobile] = useState(false); const [theme, setTheme] = useState("light"); const [unread, setUnread] = useState(0); const [profile, setProfile] = useState(false);
   useEffect(() => { setTheme(document.documentElement.dataset.theme || "light"); fetch("/api/alerts?unread=true").then(r => r.json()).then(d => setUnread(d.unread || 0)).catch(() => undefined); }, [pathname]);
   function toggleTheme() { const next = theme === "dark" ? "light" : "dark"; setTheme(next); document.documentElement.dataset.theme = next; localStorage.setItem("pharmintel-theme", next); }
