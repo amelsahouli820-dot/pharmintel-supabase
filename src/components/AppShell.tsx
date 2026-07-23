@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2 } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
 
 type Role = "ADMIN"|"DIRECTOR_GENERAL"|"SUPERVISOR"|"DELEGATE";
@@ -10,10 +10,12 @@ type User = { id: string; name: string; email: string; role: Role };
 const roleLabels:Record<Role,string>={ADMIN:"Administrateur",DIRECTOR_GENERAL:"Directeur Général",SUPERVISOR:"Superviseur",DELEGATE:"Délégué"};
 const links = [
   { href: "/tableau-de-bord", label: "Vue d’ensemble", icon: LayoutDashboard },
-  { href: "/imports", label: "Documents", icon: UploadCloud },
+  { href: "/imports", label: "Importer", icon: UploadCloud },
+  { href: "/documents", label: "Documents", icon: Database },
   { href: "/nouvelle-information", label: "Nouvelle information", icon: PlusCircle },
   { href: "/veille", label: "Données de veille", icon: Database },
   { href: "/performances", label: "Performances", icon: Trophy },
+  { href: "/croisement", label: "Croisement national", icon: MapPinned },
   { href: "/assistant", label: "Assistant IA", icon: Sparkles },
   { href: "/alertes", label: "Alertes", icon: Bell }
 ];
@@ -21,7 +23,7 @@ const links = [
 export function AppShell({ user, children }: { user: User; children: React.ReactNode }) {
   const pathname = usePathname(); const router = useRouter();
   const visibleLinks = links.filter(link => {
-    if (link.href === "/imports") return user.role !== "DIRECTOR_GENERAL";
+    if (link.href === "/imports") return user.role === "ADMIN" || user.role === "DELEGATE";
     if (link.href === "/nouvelle-information") return user.role === "ADMIN" || user.role === "DELEGATE";
     return true;
   });
@@ -37,7 +39,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
       <nav className="nav-list" aria-label="Navigation principale">
         <p className="nav-label">ESPACE DE VEILLE</p>
         {visibleLinks.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setMobile(false)} className={pathname.startsWith(href) ? "active" : ""}><Icon size={19}/><span>{label}</span>{href === "/alertes" && unread > 0 && <b className="nav-badge">{unread}</b>}</Link>)}
-        {user.role === "ADMIN" && <><p className="nav-label nav-separator">ADMINISTRATION</p><Link href="/utilisateurs" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs") ? "active" : ""}><Users size={19}/><span>Utilisateurs</span></Link><Link href="/journal" onClick={() => setMobile(false)} className={pathname.startsWith("/journal") ? "active" : ""}><ScrollText size={19}/><span>Journal d’activité</span></Link></>}
+        {user.role === "ADMIN" && <><p className="nav-label nav-separator">ADMINISTRATION</p><Link href="/utilisateurs" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs") ? "active" : ""}><Users size={19}/><span>Utilisateurs</span></Link><Link href="/referentiels" onClick={() => setMobile(false)} className={pathname.startsWith("/referentiels") ? "active" : ""}><Building2 size={19}/><span>Référentiels</span></Link><Link href="/journal" onClick={() => setMobile(false)} className={pathname.startsWith("/journal") ? "active" : ""}><ScrollText size={19}/><span>Journal d’activité</span></Link></>}
       </nav>
       <div className="sidebar-foot"><div className="secure-chip"><ShieldCheck size={16}/><span><strong>Espace sécurisé</strong><small>Chiffrement actif</small></span></div><span className="version">PharmIntel v1.0</span></div>
     </aside>

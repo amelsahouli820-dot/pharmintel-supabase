@@ -47,7 +47,7 @@ export async function readSession(): Promise<SessionPayload | null> {
 export async function requireSession() {
   const session = await readSession();
   if (!session?.sub) redirect("/connexion");
-  const user = await db.user.findUnique({ where: { id: session.sub }, select: { id: true, name: true, email: true, role: true, status: true, permissions: true, mustChangePassword: true, sessionVersion: true } });
+  const user = await db.user.findUnique({ where: { id: session.sub }, select: { id: true, name: true, email: true, role: true, status: true, permissions: true, region: true, wilaya: true, supervisorId: true, mustChangePassword: true, sessionVersion: true } });
   if (!user || user.status !== "ACTIVE" || user.sessionVersion !== session.sessionVersion) redirect("/connexion");
   return user;
 }
@@ -55,7 +55,7 @@ export async function requireSession() {
 export async function requireApiUser(role?: Role) {
   const session = await readSession();
   if (!session?.sub) return null;
-  const user = await db.user.findUnique({ where: { id: session.sub }, select: { id: true, name: true, email: true, role: true, status: true, permissions: true, mustChangePassword: true, sessionVersion: true } });
+  const user = await db.user.findUnique({ where: { id: session.sub }, select: { id: true, name: true, email: true, role: true, status: true, permissions: true, region: true, wilaya: true, supervisorId: true, mustChangePassword: true, sessionVersion: true } });
   if (!user || user.status !== "ACTIVE" || user.sessionVersion !== session.sessionVersion || (role && user.role !== role)) return null;
   return user;
 }

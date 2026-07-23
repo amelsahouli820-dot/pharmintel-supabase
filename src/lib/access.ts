@@ -10,13 +10,13 @@ export function canEditDocument(user: Actor, ownerId: string, ownerSupervisorId?
 export function canDeleteDocument(user: Actor, ownerId: string, explicitPermission = true) { return user.role === "ADMIN" || (user.role === "DELEGATE" && user.id === ownerId && explicitPermission); }
 export function documentScope(user: Actor): Prisma.DocumentWhereInput {
   if (hasGlobalVision(user)) return {};
-  if (user.role === "SUPERVISOR") return { OR: [{ userId: user.id }, { user: { supervisorId: user.id } }] };
-  return { userId: user.id };
+  if (user.role === "SUPERVISOR") return { OR: [{ userId: user.id }, { user: { supervisorId: user.id } }, { confirmations: { some: { user: { supervisorId: user.id } } } }] };
+  return { OR:[{userId:user.id},{confirmations:{some:{userId:user.id}}}] };
 }
 export function recordScope(user: Actor): Prisma.IntelligenceRecordWhereInput {
   if (hasGlobalVision(user)) return {};
-  if (user.role === "SUPERVISOR") return { OR: [{ userId: user.id }, { user: { supervisorId: user.id } }] };
-  return { userId: user.id };
+  if (user.role === "SUPERVISOR") return { OR: [{ userId: user.id }, { user: { supervisorId: user.id } }, { signal: { confirmations: { some: { user: { supervisorId: user.id } } } } }] };
+  return { OR:[{userId:user.id},{signal:{confirmations:{some:{userId:user.id}}}}] };
 }
 export function roleLabel(role: Role) {
   return ({ ADMIN:"Administrateur", DIRECTOR_GENERAL:"Directeur Général", SUPERVISOR:"Superviseur", DELEGATE:"Délégué" } as Record<Role,string>)[role];

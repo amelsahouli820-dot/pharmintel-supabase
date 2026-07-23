@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { getFile } from "@/lib/storage";
 import { analyzeDocument, type ExtractedRecord } from "./extraction";
 import type { AlertSeverity, AlertType, Prisma } from "@prisma/client";
+import { linkSignal } from "@/lib/signals";
 
 const regionByWilaya: Record<string, string> = {
   "alger": "Centre", "blida": "Centre", "boumerdes": "Centre", "tipaza": "Centre", "bejaia": "Centre", "béjaïa": "Centre", "tizi ouzou": "Centre",
@@ -56,6 +57,7 @@ export async function processDocument(documentId: string) {
     await tx.document.update({ where: { id: documentId }, data: { status: "COMPLETED", reviewStatus: "NEEDS_REVIEW", rawText: extraction.rawText, processedAt: new Date(), errorMessage: null } });
     await tx.auditLog.create({ data: { actorId: document.userId, action: "DOCUMENT_ANALYZED", entityType: "Document", entityId: documentId, metadata: { records: extraction.records.length, summary: extraction.summary } } });
   }, { timeout: 120_000 });
+  const structured=await db.intelligenceRecord.findMany({where:{documentId}});for(const record of structured)await linkSignal({recordId:record.id,documentId,userId:document.userId,wholesaler:record.wholesaler,laboratory:record.laboratory,product:record.product,offerType:record.offerType,region:record.region||document.region,wilaya:record.wilaya||document.wilaya});
 }
 
 export async function markFinalFailure(documentId: string, error: Error) {

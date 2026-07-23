@@ -77,6 +77,23 @@ enum InformationSourceKind {
   MANUAL
 }
 
+enum ReferenceEntityType {
+  WHOLESALER
+  LABORATORY
+  HEALTH_ESTABLISHMENT
+  PHARMACY
+  SUPPLIER
+  COMPETITOR
+  OTHER
+}
+
+enum SignalStatus {
+  EMERGING
+  CONFIRMED
+  CONTRADICTORY
+  TREND
+}
+
 enum OfferType {
   OFFER
   PROMOTION
@@ -122,6 +139,8 @@ model User {
   role               Role         @default(DELEGATE)
   status             UserStatus   @default(ACTIVE)
   supervisorId       String?
+  region             String?
+  wilaya             String?
   supervisor         User?        @relation("UserSupervision", fields: [supervisorId], references: [id], onDelete: SetNull)
   delegates          User[]       @relation("UserSupervision")
   mustChangePassword Boolean      @default(true)
@@ -138,6 +157,9 @@ model User {
   documentComments   DocumentComment[]
   scoreEvents        ScoreEvent[] @relation("ScoreRecipient")
   awardedScoreEvents ScoreEvent[] @relation("ScoreAwarder")
+  validations        DocumentValidation[]
+  confirmations      SignalConfirmation[]
+  documentConfirmations DocumentConfirmation[]
 
   @@index([status, role])
   @@index([supervisorId])
@@ -157,6 +179,9 @@ model Document {
   reviewStatus ReviewStatus             @default(PENDING)
   sourceKind   InformationSourceKind    @default(FILE)
   fieldSource  String?
+  entityType   ReferenceEntityType      @default(WHOLESALER)
+  entityName   String?
+  wilaya       String?
   confidenceLevel Int?
   isStrategic  Boolean                  @default(false)
   wholesaler   String?
@@ -180,6 +205,9 @@ model Document {
   attachments  Attachment[]
   documentComments DocumentComment[]
   scoreEvents  ScoreEvent[]
+  validations  DocumentValidation[]
+  signalConfirmations SignalConfirmation[]
+  confirmations DocumentConfirmation[] @relation("CanonicalDocumentConfirmations")
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
@@ -250,12 +278,103 @@ model ScoreEvent {
   @@map("score_events")
 }
 
+model ReferenceEntity {
+  id        String              @id @default(cuid())
+  type      ReferenceEntityType
+  name      String
+  aliases   String[]
+  active    Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@unique([type, name])
+  @@index([type, active])
+  @@map("reference_entities")
+}
+
+model DocumentValidation {
+  id             String   @id @default(cuid())
+  documentId     String
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment        String?  @db.Text
+  attachmentName String?
+  attachmentKey  String?
+  attachmentMime String?
+  attachmentSize Int?
+  createdAt      DateTime @default(now())
+
+  @@index([documentId, createdAt])
+  @@map("document_validations")
+}
+
+model InformationSignal {
+  id                String       @id @default(cuid())
+  fingerprint       String       @unique
+  wholesaler        String?
+  laboratory        String?
+  product           String
+  offerType         OfferType
+  status            SignalStatus @default(EMERGING)
+  confirmationCount Int          @default(1)
+  reliabilityScore  Int          @default(40)
+  firstSeenAt       DateTime     @default(now())
+  lastSeenAt        DateTime     @default(now())
+  records           IntelligenceRecord[]
+  confirmations     SignalConfirmation[]
+
+  @@index([status, reliabilityScore])
+  @@index([wholesaler])
+  @@index([laboratory])
+  @@index([product])
+  @@map("information_signals")
+}
+
+model SignalConfirmation {
+  id         String             @id @default(cuid())
+  signalId   String
+  signal     InformationSignal  @relation(fields: [signalId], references: [id], onDelete: Cascade)
+  documentId String
+  document   Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  recordId   String?
+  record     IntelligenceRecord? @relation(fields: [recordId], references: [id], onDelete: SetNull)
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region     String?
+  wilaya     String?
+  createdAt  DateTime           @default(now())
+
+  @@unique([signalId, documentId, userId])
+  @@index([signalId, createdAt])
+  @@index([wilaya])
+  @@map("signal_confirmations")
+}
+
+model DocumentConfirmation {
+  id                  String   @id @default(cuid())
+  canonicalDocumentId String
+  canonicalDocument   Document @relation("CanonicalDocumentConfirmations", fields: [canonicalDocumentId], references: [id], onDelete: Cascade)
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region              String?
+  wilaya              String?
+  comment              String?
+  createdAt            DateTime @default(now())
+
+  @@unique([canonicalDocumentId, userId])
+  @@index([canonicalDocumentId, createdAt])
+  @@map("document_confirmations")
+}
+
 model IntelligenceRecord {
   id              String      @id @default(cuid())
   documentId      String
   document        Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
   userId          String
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  signalId        String?
+  signal          InformationSignal? @relation(fields: [signalId], references: [id], onDelete: SetNull)
   observedAt      DateTime?
   wholesaler      String?
   laboratory     String?
@@ -288,8 +407,10 @@ model IntelligenceRecord {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   alerts          Alert[]
+  signalConfirmations SignalConfirmation[]
 
   @@index([userId, createdAt])
+  @@index([signalId])
   @@index([observedAt])
   @@index([wholesaler])
   @@index([laboratory])

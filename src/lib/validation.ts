@@ -5,7 +5,7 @@ export const changePasswordSchema = z.object({ currentPassword: z.string().min(8
 export const createUserSchema = z.object({
   name: z.string().trim().min(2).max(100), email: z.string().email().max(254).transform(v => v.toLowerCase().trim()),
   role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).default("DELEGATE"), temporaryPassword: z.string().min(12).max(128),
-  supervisorId: z.string().cuid().nullable().optional(),
+  supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean(), canEditOwn: z.boolean().optional(), canDeleteOwn: z.boolean().optional() }).default({ canImport: true, canUseAI: true, canExport: true, canEditOwn: true, canDeleteOwn: false })
 });
 export const documentMetadataSchema = z.object({
@@ -14,7 +14,7 @@ export const documentMetadataSchema = z.object({
   documentType: z.enum(["FLASH_SALE","RESTOCK","COMMERCIAL_PROPOSAL","QUOTA","PROMOTION","CONVENTION","REBATE","EXCEPTIONAL_DISCOUNT","PRICING","CATALOG","STOCKOUT","PRODUCT_LAUNCH","COMMERCIAL_COMMUNICATION","LAB_INFORMATION","LETTER","EMAIL","OTHER"]),
   customDocumentType: z.string().trim().max(150).optional().default(""),
   documentDate: z.string().optional().default(""), receivedAt: z.string().optional().default(""),
-  region: z.string().trim().max(150).optional().default(""), laboratory: z.string().trim().max(200).optional().default(""),
+  region: z.string().trim().max(150).optional().default(""), wilaya: z.string().trim().max(100).optional().default(""), laboratory: z.string().trim().max(200).optional().default(""),
   comments: z.string().trim().max(3000).optional().default(""),
   confidentiality: z.enum(["INTERNAL","CONFIDENTIAL","HIGHLY_CONFIDENTIAL"]).default("INTERNAL"),
   priority: z.enum(["LOW","NORMAL","HIGH","URGENT"]).default("NORMAL")
@@ -36,6 +36,6 @@ export const registrationSchema = z.object({
 });
 
 export const updateUserSchema = z.object({
-  name: z.string().trim().min(2).max(100).optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "SUSPENDED"]).optional(), supervisorId: z.string().cuid().nullable().optional(),
+  name: z.string().trim().min(2).max(100).optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "SUSPENDED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean() }).optional(), temporaryPassword: z.string().min(12).max(128).optional()
 });

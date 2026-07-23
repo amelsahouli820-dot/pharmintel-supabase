@@ -1,0 +1,1 @@
+import{redirect}from"next/navigation";import{requireSession}from"@/lib/auth";import{CatalogManager}from"@/components/CatalogManager";export default async function Page(){const u=await requireSession();if(u.role!=="ADMIN")redirect("/tableau-de-bord");return <CatalogManager/>}

@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest, context: Context) {
     const supervisor = await db.user.findFirst({ where: { id: changes.supervisorId, role: "SUPERVISOR", status: "ACTIVE" } });
     if (!supervisor) return badRequest("Le superviseur sélectionné n’est pas valide.");
   }
-  if (changes.role && changes.role !== "DELEGATE") changes.supervisorId = null;
+  if (changes.role && changes.role !== "DELEGATE") { changes.supervisorId = null; changes.region = null; changes.wilaya = null; }
   const user = await db.user.update({ where: { id }, data: { ...changes, ...(temporaryPassword ? { passwordHash: await bcrypt.hash(temporaryPassword, 12), mustChangePassword: true, sessionVersion: { increment: 1 } } : {}),
       ...(changes.status === "SUSPENDED" && !temporaryPassword ? { sessionVersion: { increment: 1 } } : {}) } }).catch(() => null);
   if (!user) return NextResponse.json({ error: "Utilisateur introuvable." }, { status: 404 });
