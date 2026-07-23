@@ -1,0 +1,11 @@
+{
+  "name": "PharmIntel — Veille concurrentielle",
+  "short_name": "PharmIntel",
+  "description": "Veille concurrentielle pharmaceutique sécurisée",
+  "start_url": "/tableau-de-bord",
+  "display": "standalone",
+  "background_color": "#f4f7f5",
+  "theme_color": "#123d36",
+  "lang": "fr",
+  "icons": [{ "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
