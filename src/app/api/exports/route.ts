@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { requireApiUser, permissionsOf } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { audit, badRequest, clientIp, forbidden, unauthorized } from "@/lib/http";
+import { recordScope } from "@/lib/access";
 
 export const runtime = "nodejs";
 
@@ -13,7 +14,7 @@ type Row = Awaited<ReturnType<typeof getRows>>[number];
 async function getRows(user: NonNullable<Awaited<ReturnType<typeof requireApiUser>>>, request: NextRequest) {
   const s = request.nextUrl.searchParams;
   const where: Prisma.IntelligenceRecordWhereInput = {
-    ...(user.role === "ADMIN" ? {} : { userId: user.id }),
+    ...recordScope(user),
     ...(s.get("type") ? { offerType: s.get("type") as never } : {}),
     ...(s.get("from") ? { observedAt: { gte: new Date(s.get("from")!) } } : {}),
     ...(s.get("to") ? { observedAt: { lte: new Date(`${s.get("to")}T23:59:59`) } } : {})

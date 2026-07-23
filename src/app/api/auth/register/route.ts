@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const user = await db.user.create({ data: {
       name: parsed.data.name, email: parsed.data.email,
       passwordHash: await bcrypt.hash(randomBytes(48).toString("base64url"), 12),
-      role: "USER", status: "PENDING", mustChangePassword: true,
+      role: "DELEGATE", status: "PENDING", mustChangePassword: true,
       permissions: { canImport: true, canUseAI: true, canExport: true }
     }});
     const admins = await db.user.findMany({ where: { role: "ADMIN", status: "ACTIVE" }, select: { id: true } });

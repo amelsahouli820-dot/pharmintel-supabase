@@ -62,5 +62,5 @@ export async function requireApiUser(role?: Role) {
 
 export function permissionsOf(value: unknown) {
   const p = (value && typeof value === "object" ? value : {}) as Record<string, unknown>;
-  return { canImport: p.canImport !== false, canUseAI: p.canUseAI !== false, canExport: p.canExport !== false };
+  return { canImport: p.canImport !== false, canUseAI: p.canUseAI !== false, canExport: p.canExport !== false, canEditOwn: p.canEditOwn !== false, canDeleteOwn: p.canDeleteOwn === true };
 }

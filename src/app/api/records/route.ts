@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { requireApiUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { unauthorized } from "@/lib/http";
+import { audit, clientIp, unauthorized } from "@/lib/http";
+import { recordScope } from "@/lib/access";
 
 export async function GET(request: NextRequest) {
   const user = await requireApiUser();
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   const take = Math.min(100, Math.max(1, Number(s.get("limit")) || 20));
   const search = s.get("search")?.trim();
   const where: Prisma.IntelligenceRecordWhereInput = {
-    ...(user.role === "ADMIN" ? {} : { userId: user.id }),
+    ...recordScope(user),
     ...(s.get("type") ? { offerType: s.get("type") as never } : {}),
     ...(s.get("wilaya") ? { wilaya: { contains: s.get("wilaya")!, mode: "insensitive" } } : {}),
     ...(s.get("userId") && user.role === "ADMIN" ? { userId: s.get("userId")! } : {}),
@@ -22,5 +23,6 @@ export async function GET(request: NextRequest) {
     db.intelligenceRecord.findMany({ where, orderBy: [{ observedAt: "desc" }, { createdAt: "desc" }], skip: (page - 1) * take, take, include: { user: { select: { id: true, name: true } }, document: { select: { originalName: true } } } }),
     db.intelligenceRecord.count({ where })
   ]);
+  await audit(user.id, "DATA_VIEWED", "IntelligenceRecord", undefined, { page, results: items.length, search: search || null }, clientIp(request));
   return NextResponse.json({ items, total, page, pages: Math.ceil(total / take) });
 }

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { assertSameOrigin, audit, badRequest, clientIp, forbidden, unauthorized } from "@/lib/http";
 import { putFile } from "@/lib/storage";
 import { documentMetadataSchema } from "@/lib/validation";
+import { canImportDocuments, documentScope } from "@/lib/access";
 
 const allowedExtensions = new Set([".pdf", ".docx", ".xlsx", ".png", ".jpg", ".jpeg", ".webp", ".txt", ".csv"]);
 
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (!user) return unauthorized();
   const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
   const take = Math.min(50, Math.max(1, Number(request.nextUrl.searchParams.get("limit")) || 15));
-  const where = user.role === "ADMIN" ? {} : { userId: user.id };
+  const where = documentScope(user);
   const [items, total] = await Promise.all([
     db.document.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * take, take, include: { user: { select: { name: true } }, _count: { select: { records: true } } } }),
     db.document.count({ where })
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (!assertSameOrigin(request)) return NextResponse.json({ error: "Origine non autorisée." }, { status: 403 });
   const user = await requireApiUser();
   if (!user) return unauthorized();
-  if (!permissionsOf(user.permissions).canImport) return forbidden();
+  if (!canImportDocuments(user) || !permissionsOf(user.permissions).canImport) return forbidden();
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   if (!(file instanceof File)) return badRequest("Sélectionnez un document à importer.");

@@ -1,4 +1,4 @@
-import { CreateBucketCommand, GetObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { CreateBucketCommand, DeleteObjectCommand, GetObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Readable } from "node:stream";
 
@@ -67,4 +67,14 @@ export async function getFile(key: string) {
   const chunks: Buffer[] = [];
   for await (const chunk of response.Body as Readable) chunks.push(Buffer.from(chunk));
   return Buffer.concat(chunks);
+}
+
+export async function deleteFile(key: string) {
+  await ensureBucket();
+  if (driver === "supabase") {
+    const { error } = await supabaseAdmin().storage.from(Bucket).remove([key]);
+    if (error) throw error;
+    return;
+  }
+  await s3.send(new DeleteObjectCommand({ Bucket, Key: key }));
 }

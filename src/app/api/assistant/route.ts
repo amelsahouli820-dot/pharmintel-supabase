@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireApiUser, permissionsOf } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { audit, badRequest, clientIp, forbidden, rateLimit, unauthorized } from "@/lib/http";
+import { recordScope } from "@/lib/access";
 
 const schema = z.object({ question: z.string().trim().min(3).max(1000) });
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return badRequest("Saisissez une question valide.");
   if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: "Le service IA n’est pas encore configuré." }, { status: 503 });
   const records = await db.intelligenceRecord.findMany({
-    where: user.role === "ADMIN" ? {} : { userId: user.id }, orderBy: { createdAt: "desc" }, take: 750,
+    where: recordScope(user), orderBy: { createdAt: "desc" }, take: 750,
     select: { id: true, observedAt: true, wholesaler: true, laboratory: true, product: true, productRange: true, molecule: true, therapeuticClass: true, productCode: true, cip: true, price: true, priceHt: true, priceTtc: true, promotionalPrice: true, currency: true, offerType: true, discountPercent: true, freeUnits: true, quota: true, commercialConditions: true, startsAt: true, endsAt: true, wilaya: true, city: true, region: true, salesperson: true, distributionChannel: true, comments: true, user: { select: { name: true } } }
   });
   const dataset = records.map(r => ({ ...r, price: r.price?.toString(), priceHt: r.priceHt?.toString(), priceTtc: r.priceTtc?.toString(), promotionalPrice: r.promotionalPrice?.toString(), discountPercent: r.discountPercent?.toString() }));
