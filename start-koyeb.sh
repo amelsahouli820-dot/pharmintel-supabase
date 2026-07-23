@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+# Repair the one migration that could fail on PostgreSQL when adding and using an enum value in the same transaction.
+npx prisma migrate resolve --rolled-back 20260724180000_manual_workflow_scoring >/dev/null 2>&1 || true
 npx prisma migrate deploy
 npm run db:seed
 NODE_OPTIONS="--max-old-space-size=190" npm start &
