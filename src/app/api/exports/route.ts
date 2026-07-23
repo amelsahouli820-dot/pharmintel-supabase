@@ -20,8 +20,8 @@ async function getRows(user: NonNullable<Awaited<ReturnType<typeof requireApiUse
   };
   return db.intelligenceRecord.findMany({ where, orderBy: { observedAt: "desc" }, take: 50_000, include: { user: { select: { name: true } } } });
 }
-const columns = ["Date", "Grossiste", "Laboratoire", "Produit", "Prix", "Devise", "Type", "Remise", "Wilaya", "Région", "Commentaires", "Utilisateur"];
-function values(r: Row) { return [r.observedAt?.toISOString().slice(0, 10) || "", r.wholesaler || "", r.laboratory || "", r.product, r.price?.toString() || "", r.currency, r.offerType, r.discountPercent ? `${r.discountPercent}%` : "", r.wilaya || "", r.region || "", r.comments || "", r.user.name]; }
+const columns = ["Date","Grossiste","Laboratoire","Produit","Gamme","Molécule","Classe thérapeutique","CIP","Code produit","Prix HT","Prix TTC","Prix promotionnel","Devise","Type","Remise","UG","Quota","Début","Fin","Conditions commerciales","Wilaya","Ville","Région","Commercial","Canal","Commentaires","Utilisateur"];
+function values(r: Row) { return [r.observedAt?.toISOString().slice(0,10)||"",r.wholesaler||"",r.laboratory||"",r.product,r.productRange||"",r.molecule||"",r.therapeuticClass||"",r.cip||"",r.productCode||"",r.priceHt?.toString()||"",r.priceTtc?.toString()||"",r.promotionalPrice?.toString()||r.price?.toString()||"",r.currency,r.offerType,r.discountPercent?`${r.discountPercent}%`:"",r.freeUnits??"",r.quota||"",r.startsAt?.toISOString().slice(0,10)||"",r.endsAt?.toISOString().slice(0,10)||"",r.commercialConditions||"",r.wilaya||"",r.city||"",r.region||"",r.salesperson||"",r.distributionChannel||"",r.comments||"",r.user.name]; }
 async function pdfBuffer(rows: Row[]) {
   const doc = new PDFDocument({ size: "A4", margin: 36, bufferPages: true });
   const chunks: Buffer[] = []; doc.on("data", c => chunks.push(Buffer.from(c)));
@@ -51,13 +51,13 @@ export async function GET(request: NextRequest) {
   if (format === "xlsx") {
     const workbook = new ExcelJS.Workbook(); workbook.creator = "PharmIntel"; workbook.created = new Date();
     const sheet = workbook.addWorksheet("Veille concurrentielle", { views: [{ state: "frozen", ySplit: 1 }] });
-    sheet.columns = columns.map((header, i) => ({ header, key: String(i), width: [13, 24, 22, 32, 13, 10, 16, 12, 16, 13, 40, 22][i] }));
+    sheet.columns = columns.map((header, i) => ({ header, key: String(i), width: [13,22,22,30,18,20,22,14,14,12,12,14,9,17,11,8,14,12,12,36,14,14,14,20,18,36,20][i] || 16 }));
     rows.forEach(r => sheet.addRow(values(r)));
     sheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } }; sheet.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF183F38" } };
-    sheet.autoFilter = { from: "A1", to: "L1" };
+    sheet.autoFilter = { from: "A1", to: "AA1" };
     buffer = Buffer.from(await workbook.xlsx.writeBuffer()); contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
   } else if (format === "docx") {
-    const tableRows = [new TableRow({ tableHeader: true, children: ["Date", "Grossiste", "Produit", "Type", "Remise"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "Strong" })] })) }), ...rows.slice(0, 5000).map(r => new TableRow({ children: [values(r)[0], values(r)[1], values(r)[3], values(r)[6], values(r)[7]].map(x => new TableCell({ children: [new Paragraph(String(x))] })) }))];
+    const tableRows = [new TableRow({ tableHeader: true, children: ["Date", "Grossiste", "Produit", "Type", "Remise"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "Strong" })] })) }), ...rows.slice(0, 5000).map(r => new TableRow({ children: [values(r)[0], values(r)[1], values(r)[3], values(r)[13], values(r)[14]].map(x => new TableCell({ children: [new Paragraph(String(x))] })) }))];
     const document = new WordDocument({ sections: [{ children: [new Paragraph({ text: "Rapport de veille concurrentielle", heading: HeadingLevel.TITLE }), new Paragraph(`Généré le ${new Date().toLocaleDateString("fr-DZ")} — ${rows.length} enregistrements`), new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: tableRows })] }] });
     buffer = Buffer.from(await Packer.toBuffer(document)); contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   } else { buffer = await pdfBuffer(rows); contentType = "application/pdf"; }

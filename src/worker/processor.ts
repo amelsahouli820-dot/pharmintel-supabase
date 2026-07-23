@@ -27,7 +27,8 @@ export async function processDocument(documentId: string) {
   if (!document) throw new Error("Document introuvable");
   await db.document.update({ where: { id: documentId }, data: { status: "PROCESSING", errorMessage: null } });
   const buffer = await getFile(document.storageKey);
-  const extraction = await analyzeDocument(buffer, document.mimeType, document.originalName);
+  const context = JSON.stringify({ grossiste: document.wholesaler, typeDocument: document.customDocumentType || document.documentType, dateDocument: document.documentDate?.toISOString().slice(0,10), dateReception: document.receivedAt?.toISOString().slice(0,10), region: document.region, laboratoire: document.laboratory, commentaires: document.comments });
+  const extraction = await analyzeDocument(buffer, document.mimeType, document.originalName, context);
   if (!extraction.records.length) throw new Error("Aucune offre ou information produit n’a été détectée");
   const admins = await db.user.findMany({ where: { role: "ADMIN", status: "ACTIVE" }, select: { id: true } });
   const recipients = [...new Set([document.userId, ...admins.map(a => a.id)])];
@@ -35,17 +36,24 @@ export async function processDocument(documentId: string) {
     await tx.intelligenceRecord.deleteMany({ where: { documentId } });
     for (const item of extraction.records) {
       const existing = await tx.intelligenceRecord.count({ where: { product: { equals: item.product, mode: "insensitive" }, documentId: { not: documentId } } });
+      const fallbackOffer = ({ FLASH_SALE:"FLASH_SALE", RESTOCK:"RESTOCK", PROMOTION:"PROMOTION", REBATE:"DISCOUNT", EXCEPTIONAL_DISCOUNT:"DISCOUNT", PRODUCT_LAUNCH:"NEW_PRODUCT", COMMERCIAL_PROPOSAL:"OFFER" } as Record<string,string>)[document.documentType] || "OTHER";
       const data: Prisma.IntelligenceRecordUncheckedCreateInput = {
-        documentId, userId: document.userId, observedAt: parsedDate(item.date), wholesaler: item.wholesaler, laboratory: item.laboratory,
-        product: item.product, price: item.price, currency: item.currency || "DZD", offerType: item.offerType,
-        discountPercent: item.discountPercent, wilaya: item.wilaya, region: regionFor(item.wilaya), comments: item.comments,
-        confidence: item.confidence, rawExtraction: item as unknown as Prisma.InputJsonValue
+        documentId, userId: document.userId, observedAt: parsedDate(item.date) || document.documentDate,
+        wholesaler: item.wholesaler || document.wholesaler, laboratory: item.laboratory || document.laboratory,
+        product: item.product, productRange: item.productRange, molecule: item.molecule, therapeuticClass: item.therapeuticClass,
+        productCode: item.productCode, cip: item.cip,
+        price: item.price ?? item.promotionalPrice ?? item.priceTtc, priceHt: item.priceHt, priceTtc: item.priceTtc, promotionalPrice: item.promotionalPrice,
+        currency: item.currency || "DZD", offerType: item.offerType === "OTHER" ? fallbackOffer as never : item.offerType,
+        discountPercent: item.discountPercent, freeUnits: item.freeUnits, quota: item.quota, commercialConditions: item.commercialConditions,
+        startsAt: parsedDate(item.startDate), endsAt: parsedDate(item.endDate), wilaya: item.wilaya, city: item.city,
+        region: item.region || document.region || regionFor(item.wilaya), salesperson: item.salesperson, distributionChannel: item.distributionChannel,
+        comments: item.comments, confidence: item.confidence, rawExtraction: item as unknown as Prisma.InputJsonValue
       };
       const record = await tx.intelligenceRecord.create({ data });
       const alerts = alertsFor(item, existing === 0);
       if (alerts.length) await tx.alert.createMany({ data: recipients.flatMap(userId => alerts.map(alert => ({ ...alert, userId, recordId: record.id }))) });
     }
-    await tx.document.update({ where: { id: documentId }, data: { status: "COMPLETED", rawText: extraction.rawText, processedAt: new Date(), errorMessage: null } });
+    await tx.document.update({ where: { id: documentId }, data: { status: "COMPLETED", reviewStatus: "NEEDS_REVIEW", rawText: extraction.rawText, processedAt: new Date(), errorMessage: null } });
     await tx.auditLog.create({ data: { actorId: document.userId, action: "DOCUMENT_ANALYZED", entityType: "Document", entityId: documentId, metadata: { records: extraction.records.length, summary: extraction.summary } } });
   }, { timeout: 120_000 });
 }

@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     ...(s.get("type") ? { offerType: s.get("type") as never } : {}),
     ...(s.get("wilaya") ? { wilaya: { contains: s.get("wilaya")!, mode: "insensitive" } } : {}),
     ...(s.get("userId") && user.role === "ADMIN" ? { userId: s.get("userId")! } : {}),
-    ...(search ? { OR: ["product", "wholesaler", "laboratory", "comments"].map(field => ({ [field]: { contains: search, mode: "insensitive" } })) } : {})
+    ...(search ? { OR: ["product", "wholesaler", "laboratory", "molecule", "therapeuticClass", "productCode", "cip", "salesperson", "comments"].map(field => ({ [field]: { contains: search, mode: "insensitive" } })) } : {})
   };
   const [items, total] = await Promise.all([
     db.intelligenceRecord.findMany({ where, orderBy: [{ observedAt: "desc" }, { createdAt: "desc" }], skip: (page - 1) * take, take, include: { user: { select: { id: true, name: true } }, document: { select: { originalName: true } } } }),

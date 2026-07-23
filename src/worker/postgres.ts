@@ -38,7 +38,13 @@ async function run() {
       const error = value instanceof Error ? value : new Error(String(value));
       console.error(`[worker-postgres] ${error.message}`);
       if (job) {
-        if (job.attempts < 3) {
+        const aiBlocked = /OPENAI_API_KEY|insufficient_quota|billing|quota|429|api key/i.test(error.message);
+        if (aiBlocked) {
+          await db.$transaction([
+            db.processingJob.update({ where: { id: job.id }, data: { status: "BLOCKED", lockedAt: null, errorMessage: error.message.slice(0, 1000) } }),
+            db.document.update({ where: { id: job.documentId }, data: { status: "WAITING_AI", errorMessage: "Analyse en attente d’activation ou de crédit IA." } })
+          ]).catch(() => undefined);
+        } else if (job.attempts < 3) {
           await db.$transaction([
             db.processingJob.update({ where: { id: job.id }, data: { status: "QUEUED", lockedAt: null, errorMessage: error.message.slice(0, 1000) } }),
             db.document.update({ where: { id: job.documentId }, data: { status: "PENDING", errorMessage: `Nouvelle tentative ${job.attempts}/3` } })

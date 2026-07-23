@@ -20,10 +20,50 @@ enum UserStatus {
 }
 
 enum DocumentStatus {
+  WAITING_AI
   PENDING
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum DocumentType {
+  FLASH_SALE
+  RESTOCK
+  COMMERCIAL_PROPOSAL
+  QUOTA
+  PROMOTION
+  CONVENTION
+  REBATE
+  EXCEPTIONAL_DISCOUNT
+  PRICING
+  CATALOG
+  STOCKOUT
+  PRODUCT_LAUNCH
+  COMMERCIAL_COMMUNICATION
+  LAB_INFORMATION
+  LETTER
+  EMAIL
+  OTHER
+}
+
+enum ConfidentialityLevel {
+  INTERNAL
+  CONFIDENTIAL
+  HIGHLY_CONFIDENTIAL
+}
+
+enum PriorityLevel {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ReviewStatus {
+  PENDING_AI
+  NEEDS_REVIEW
+  VALIDATED
 }
 
 enum OfferType {
@@ -54,6 +94,7 @@ enum AlertSeverity {
 enum ProcessingJobStatus {
   QUEUED
   RUNNING
+  BLOCKED
   COMPLETED
   FAILED
 }
@@ -90,6 +131,18 @@ model Document {
   size         Int
   sha256       String
   status       DocumentStatus          @default(PENDING)
+  reviewStatus ReviewStatus             @default(PENDING_AI)
+  wholesaler   String?
+  customWholesaler String?
+  documentType DocumentType             @default(OTHER)
+  customDocumentType String?
+  documentDate DateTime?
+  receivedAt   DateTime?
+  region       String?
+  laboratory   String?
+  comments     String?                  @db.Text
+  confidentiality ConfidentialityLevel @default(INTERNAL)
+  priority     PriorityLevel            @default(NORMAL)
   errorMessage String?
   rawText      String?                 @db.Text
   processedAt  DateTime?
@@ -100,6 +153,8 @@ model Document {
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+  @@index([documentType, createdAt])
+  @@index([wholesaler, createdAt])
   @@map("documents")
 }
 
@@ -128,12 +183,28 @@ model IntelligenceRecord {
   wholesaler      String?
   laboratory     String?
   product         String
+  productRange    String?
+  molecule        String?
+  therapeuticClass String?
+  productCode     String?
+  cip             String?
   price           Decimal?    @db.Decimal(14, 2)
+  priceHt         Decimal?    @db.Decimal(14, 2)
+  priceTtc        Decimal?    @db.Decimal(14, 2)
+  promotionalPrice Decimal?  @db.Decimal(14, 2)
   currency        String      @default("DZD")
   offerType       OfferType   @default(OTHER)
   discountPercent Decimal?    @db.Decimal(5, 2)
+  freeUnits       Int?
+  quota           String?
+  commercialConditions String? @db.Text
+  startsAt        DateTime?
+  endsAt          DateTime?
   wilaya          String?
+  city            String?
   region          String?
+  salesperson     String?
+  distributionChannel String?
   comments        String?     @db.Text
   confidence      Float       @default(0)
   rawExtraction   Json
@@ -146,6 +217,8 @@ model IntelligenceRecord {
   @@index([wholesaler])
   @@index([laboratory])
   @@index([product])
+  @@index([molecule])
+  @@index([therapeuticClass])
   @@index([offerType])
   @@index([wilaya])
   @@map("intelligence_records")

@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
   if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: "Le service IA n’est pas encore configuré." }, { status: 503 });
   const records = await db.intelligenceRecord.findMany({
     where: user.role === "ADMIN" ? {} : { userId: user.id }, orderBy: { createdAt: "desc" }, take: 750,
-    select: { id: true, observedAt: true, wholesaler: true, laboratory: true, product: true, price: true, currency: true, offerType: true, discountPercent: true, wilaya: true, comments: true, user: { select: { name: true } } }
+    select: { id: true, observedAt: true, wholesaler: true, laboratory: true, product: true, productRange: true, molecule: true, therapeuticClass: true, productCode: true, cip: true, price: true, priceHt: true, priceTtc: true, promotionalPrice: true, currency: true, offerType: true, discountPercent: true, freeUnits: true, quota: true, commercialConditions: true, startsAt: true, endsAt: true, wilaya: true, city: true, region: true, salesperson: true, distributionChannel: true, comments: true, user: { select: { name: true } } }
   });
-  const dataset = records.map(r => ({ ...r, price: r.price?.toString(), discountPercent: r.discountPercent?.toString() }));
+  const dataset = records.map(r => ({ ...r, price: r.price?.toString(), priceHt: r.priceHt?.toString(), priceTtc: r.priceTtc?.toString(), promotionalPrice: r.promotionalPrice?.toString(), discountPercent: r.discountPercent?.toString() }));
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const completion = await openai.chat.completions.create({
     model: process.env.OPENAI_MODEL || "gpt-4.1-mini", store: false, temperature: 0.15,

@@ -1,0 +1,21 @@
+PHARMINTEL V2 — PHASE 1 : IMPORT INTELLIGENT ET STABILISATION
+
+1. GitHub > dépôt pharmintel-supabase > Add file > Upload files.
+2. Glisser les dossiers prisma et src de ce paquet.
+3. Attendre puis cliquer Commit changes.
+4. Render redéploie automatiquement. Vérifier le statut Live.
+5. Actualiser le site avec Ctrl+F5.
+
+Fonctions ajoutées :
+- métadonnées obligatoires Grossiste et Type de document ;
+- dates, région, laboratoire, commentaire, confidentialité, priorité ;
+- import multiple et 3 tentatives en cas de coupure ;
+- raison précise d’échec et bouton Relancer ;
+- stockage des documents même lorsque l’IA n’est pas financée ;
+- statut En attente IA au lieu d’un échec ;
+- extraction enrichie : gamme, molécule, classe, codes, CIP, prix HT/TTC/promo,
+  unités gratuites, quota, conditions, dates, ville, commercial et canal ;
+- recherche et exports enrichis ;
+- correction de l’origine Render et inscription collaborateurs conservée.
+
+L’IA restera en attente jusqu’à l’ajout d’une clé OpenAI active et créditée.
