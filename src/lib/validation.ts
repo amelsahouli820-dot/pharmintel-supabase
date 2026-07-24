@@ -3,7 +3,7 @@ import { z } from "zod";
 export const loginSchema = z.object({ email: z.string().email().max(254).transform(v => v.toLowerCase().trim()), password: z.string().min(8).max(128) });
 export const changePasswordSchema = z.object({ currentPassword: z.string().min(8).max(128), newPassword: z.string().min(12).max(128).regex(/[A-Z]/, "Une majuscule est requise").regex(/[a-z]/, "Une minuscule est requise").regex(/[0-9]/, "Un chiffre est requis").regex(/[^A-Za-z0-9]/, "Un caractère spécial est requis") });
 export const createUserSchema = z.object({
-  name: z.string().trim().min(2).max(100), email: z.string().email().max(254).transform(v => v.toLowerCase().trim()),
+  name: z.string().trim().min(2).max(100), email: z.string().email().max(254).transform(v => v.toLowerCase().trim()), phone:z.string().trim().max(30).optional().default(""),
   role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).default("DELEGATE"), temporaryPassword: z.string().min(12).max(128),
   supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean(), canEditOwn: z.boolean().optional(), canDeleteOwn: z.boolean().optional() }).default({ canImport: true, canUseAI: true, canExport: true, canEditOwn: true, canDeleteOwn: false })
@@ -36,6 +36,6 @@ export const registrationSchema = z.object({
 });
 
 export const updateUserSchema = z.object({
-  name: z.string().trim().min(2).max(100).optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "SUSPENDED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
+  name: z.string().trim().min(2).max(100).optional(), email:z.string().email().max(254).transform(v=>v.toLowerCase().trim()).optional(), phone:z.string().trim().max(30).nullable().optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "INACTIVE", "SUSPENDED", "REFUSED", "DELETED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean() }).optional(), temporaryPassword: z.string().min(12).max(128).optional()
 });

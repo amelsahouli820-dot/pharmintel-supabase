@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
   if (!(await bcrypt.compare(parsed.data.currentPassword, fullUser.passwordHash))) return badRequest("Le mot de passe temporaire est incorrect.");
   if (await bcrypt.compare(parsed.data.newPassword, fullUser.passwordHash)) return badRequest("Le nouveau mot de passe doit être différent.");
   const updated = await db.user.update({ where: { id: user.id }, data: { passwordHash: await bcrypt.hash(parsed.data.newPassword, 12), mustChangePassword: false, sessionVersion: { increment: 1 } } });
-  await createSession(updated);
+  await db.session.updateMany({where:{userId:user.id,revokedAt:null},data:{revokedAt:new Date()}});
+  await createSession(updated,{ipAddress:clientIp(request),userAgent:request.headers.get("user-agent")});
   await audit(user.id, "PASSWORD_CHANGED", "User", user.id, undefined, clientIp(request));
   return NextResponse.json({ ok: true });
 }

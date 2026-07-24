@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     scoreEvents: { create: [{ userId: user.id, points: 10, reason: "DOCUMENT_IMPORTED", details: file.name }, ...((m.wholesaler && m.documentType && m.documentDate && m.region && m.laboratory) ? [{ userId: user.id, points: 10, reason: "COMPLETE_INFORMATION", details: "Métadonnées complètes" }] : [])] },
     ...(aiReady ? { processingJob: { create: { status: "QUEUED" } } } : {})
   } });
+  const recipients=await db.user.findMany({where:{status:"ACTIVE",OR:[{role:"ADMIN"},...(user.supervisorId?[{id:user.supervisorId}]:[])]},select:{id:true}});if(recipients.length)await db.alert.createMany({data:recipients.map(r=>({userId:r.id,type:"DOCUMENT_IMPORTED",severity:document.priority==="URGENT"?"CRITICAL":"INFO",title:"Nouveau document importé",message:`${document.originalName} — ${user.name}`}))});
   await audit(user.id, "DOCUMENT_UPLOADED", "Document", document.id, { name: document.originalName, size: document.size, wholesaler: document.wholesaler, documentType: document.documentType, aiQueued: aiReady }, clientIp(request));
   return NextResponse.json({ document }, { status: 201 });
 }

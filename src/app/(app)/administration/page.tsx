@@ -1,0 +1,1 @@
+import{redirect}from"next/navigation";import{requireSession}from"@/lib/auth";import{AdminCenter}from"@/components/AdminCenter";export default async function Page(){const u=await requireSession();if(u.role!=="ADMIN")redirect("/tableau-de-bord");return <AdminCenter/>}

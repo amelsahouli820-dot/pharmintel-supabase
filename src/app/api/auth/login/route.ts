@@ -16,13 +16,15 @@ export async function POST(request: NextRequest) {
   const user = await db.user.findUnique({ where: { email: parsed.data.email } });
   const valid = await bcrypt.compare(parsed.data.password, user?.passwordHash || DUMMY_HASH);
   if (!user || !valid) {
-    await audit(user?.id || null, "LOGIN_FAILED", "Session", undefined, { email: parsed.data.email }, ip);
+    await audit(user?.id || null, "LOGIN_FAILED", "Session", undefined, { email: parsed.data.email, result:"FAILURE" }, ip);
+    const admins=await db.user.findMany({where:{role:"ADMIN",status:"ACTIVE"},select:{id:true}});if(admins.length)await db.alert.createMany({data:admins.map(a=>({userId:a.id,type:"SECURITY_LOGIN_FAILED",severity:"WARNING",title:"Tentative de connexion échouée",message:`${parsed.data.email} — ${ip}`}))}).catch(()=>undefined);
     return NextResponse.json({ error: "Adresse e-mail ou mot de passe incorrect." }, { status: 401 });
   }
   if (user.status === "PENDING") return NextResponse.json({ error: "Votre demande est en attente de validation par l’administrateur." }, { status: 403 });
-  if (user.status !== "ACTIVE") return NextResponse.json({ error: "Ce compte n’est pas autorisé. Contactez l’administrateur." }, { status: 403 });
+  if (user.status === "REFUSED") return NextResponse.json({ error: "Votre demande d’accès a été refusée. Contactez l’administrateur." }, { status: 403 });
+  if (user.status !== "ACTIVE") return NextResponse.json({ error: "Ce compte est inactif ou suspendu. Contactez l’administrateur." }, { status: 403 });
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-  await createSession(user);
+  await createSession(user,{ipAddress:ip,userAgent:request.headers.get("user-agent")});
   await audit(user.id, "LOGIN_SUCCESS", "Session", undefined, undefined, ip);
   return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role }, mustChangePassword: user.mustChangePassword });
 }
