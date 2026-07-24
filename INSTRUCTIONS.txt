@@ -1,20 +1,22 @@
-PHARMINTEL V2 — PHASE 3
-COLLECTE TERRAIN, WORKFLOW, TABLEAUX SANS IA, PERFORMANCE ET GAMIFICATION
+PHARMINTEL V2 — PHASE 6 : CARTE ADMINISTRATIVE OFFICIELLE 69 WILAYAS
 
-Déploiement : GitHub > Add file > Upload files > glisser prisma et src > Commit changes.
-Render redéploie automatiquement.
+Important : depuis la loi n° 26-06 du 4 avril 2026, le découpage officiel compte 69 wilayas.
 
-Nouveautés :
-- Nouvelle information terrain sans document et sans IA ;
-- photos éventuelles et source de l’information ;
-- statuts En attente, Modifiée, Validée, Rejetée, Archivée ;
-- validation, rejet motivé, commentaire et historique ;
-- notifications au propriétaire ;
-- tableaux de bord alimentés directement par les documents et saisies manuelles ;
-- score automatique : import +10, terrain +8, validation +15, stratégique +20,
-  information complète +10, photo +5, doublon -5, rejet -10 ;
-- classement, taux de validation, activité et progression mensuelle ;
-- rôles et isolation RBAC de la Phase 2 inclus ;
-- journal d’audit administrateur.
+Déploiement GitHub :
+- glisser prisma
+- glisser src
+- glisser public
+- Commit changes
 
-Build Next.js et TypeScript strict vérifiés avant livraison.
+Fonctions :
+- véritable fond SVG administratif, chaque wilaya est un tracé indépendant ;
+- 69 wilayas cliquables et survolables ;
+- couleurs dynamiques faible/moyenne/élevée/très élevée ;
+- tooltip documents, terrain, validations, attentes, grossistes, laboratoires, délégués ;
+- filtres métrique, région, grossiste, laboratoire, produit, type et période ;
+- liaisons entre wilayas confirmant un même signal ;
+- page détaillée de chaque wilaya ;
+- raccourcis du dashboard synchronisés avec la carte ;
+- attribution des sources cartographiques MIT incluse dans public/maps/ATTRIBUTION.txt.
+
+Build Next.js et TypeScript vérifiés.

@@ -40,6 +40,7 @@ export async function GET() {
     db.document.groupBy({ by:["documentType"], where:docScope, _count:{_all:true}, orderBy:{_count:{documentType:"desc"}}, take:10 }),
     db.document.findMany({ where:{...docScope,createdAt:{gte:startOfMonth(subMonths(new Date(),11))}}, select:{createdAt:true} })
   ]);
+  const documentTypeCount=(type:string)=>documentsByType.find(x=>x.documentType===type)?._count._all||0;
   const annualTrend=Array.from({length:12},(_,i)=>startOfMonth(subMonths(new Date(),11-i))).map(month=>({month:month.toLocaleDateString("fr-DZ",{month:"short"}),count:documentDates.filter(d=>d.createdAt.getFullYear()===month.getFullYear()&&d.createdAt.getMonth()===month.getMonth()).length}));
   const months = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), 5 - i)));
   const trend = months.map(month => {
@@ -47,7 +48,7 @@ export async function GET() {
     return { month: month.toLocaleDateString("fr-DZ", { month: "short" }).replace(".", ""), offers: Number(row?.offers || 0), flashes: Number(row?.flashes || 0) };
   });
   return NextResponse.json({
-    kpis: { offers, flashes, restocks, recordsTotal, documentsPending, totalDocuments, manualInformations, validatedDocuments, rejectedDocuments, pendingDocuments }, unreadAlerts, trend, annualTrend,
+    kpis: { offers, flashes, restocks, recordsTotal, documentsPending, totalDocuments, manualInformations, validatedDocuments, rejectedDocuments, pendingDocuments, promotionsDocuments:documentTypeCount("PROMOTION"), flashesDocuments:documentTypeCount("FLASH_SALE"), quotasDocuments:documentTypeCount("QUOTA") }, unreadAlerts, trend, annualTrend,
     documentsByWholesaler: documentsByWholesaler.map(x=>({name:x.wholesaler,count:x._count._all})),
     documentsByType: documentsByType.map(x=>({name:x.documentType,count:x._count._all})),
     topWholesalers: topWholesalers.map(x => ({ name: x.wholesaler, count: x._count._all })),
