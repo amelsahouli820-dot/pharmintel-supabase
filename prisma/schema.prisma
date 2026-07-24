@@ -88,6 +88,8 @@ enum ReferenceEntityType {
   PHARMACY
   SUPPLIER
   COMPETITOR
+  WILAYA
+  DOCUMENT_TYPE
   OTHER
 }
 
@@ -320,13 +322,18 @@ model ReferenceEntity {
   id        String              @id @default(cuid())
   type      ReferenceEntityType
   name      String
+  code      String?
+  region    String?
+  sortOrder Int                 @default(0)
+  metadata  Json                @default("{}")
   aliases   String[]
   active    Boolean             @default(true)
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
 
   @@unique([type, name])
-  @@index([type, active])
+  @@unique([type, code])
+  @@index([type, active, sortOrder])
   @@map("reference_entities")
 }
 
