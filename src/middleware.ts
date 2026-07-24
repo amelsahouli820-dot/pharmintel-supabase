@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const cookieName = "pharmintel_session";
-const publicPaths = ["/connexion", "/inscription", "/api/auth/login", "/api/auth/register", "/api/health", "/api/public/", "/manifest.webmanifest", "/sw.js", "/icons/"];
+const publicPaths = ["/connexion", "/inscription", "/mot-de-passe-oublie", "/identifiant-oublie", "/aide", "/reinitialiser", "/api/auth/login", "/api/auth/register", "/api/auth/recovery/", "/api/auth/support", "/api/health", "/api/public/", "/manifest.webmanifest", "/sw.js", "/icons/"];
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;

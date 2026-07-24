@@ -14,7 +14,7 @@ export const documentMetadataSchema = z.object({
   documentType: z.enum(["FLASH_SALE","RESTOCK","COMMERCIAL_PROPOSAL","QUOTA","PROMOTION","CONVENTION","REBATE","EXCEPTIONAL_DISCOUNT","PRICING","CATALOG","STOCKOUT","PRODUCT_LAUNCH","COMMERCIAL_COMMUNICATION","LAB_INFORMATION","LETTER","EMAIL","OTHER"]),
   customDocumentType: z.string().trim().max(150).optional().default(""),
   documentDate: z.string().optional().default(""), receivedAt: z.string().optional().default(""),
-  region: z.string().trim().max(150).optional().default(""), wilaya: z.string().trim().max(100).optional().default(""), laboratory: z.string().trim().max(200).optional().default(""),
+  region: z.string().trim().max(150).optional().default(""), wilaya: z.string().trim().max(100).optional().default(""), product:z.string().trim().max(300).optional().default(""), laboratory: z.string().trim().max(200).optional().default(""),
   comments: z.string().trim().max(3000).optional().default(""),
   confidentiality: z.enum(["INTERNAL","CONFIDENTIAL","HIGHLY_CONFIDENTIAL"]).default("INTERNAL"),
   priority: z.enum(["LOW","NORMAL","HIGH","URGENT"]).default("NORMAL")
