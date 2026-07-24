@@ -8,7 +8,7 @@ import { createUserSchema } from "@/lib/validation";
 export async function GET(request:NextRequest) {
   const admin = await requireApiUser("ADMIN");
   if (!admin) return unauthorized();
-  const status=request.nextUrl.searchParams.get("status");const users = await db.user.findMany({ where:status?{status:status as any}:{status:{notIn:["ARCHIVED","DELETED"]}},orderBy: { createdAt: "desc" }, select: { id: true, name: true, email: true, phone:true, deletedAt:true, archivedAt:true,archiveReason:true,previousRole:true, role: true, status: true, permissions: true, supervisorId: true, region: true, wilaya: true, supervisor: { select: { id: true, name: true } }, mustChangePassword: true, lastLoginAt: true, createdAt: true, _count: { select: { documents: true, records: true, delegates: true } } } });
+  const status=request.nextUrl.searchParams.get("status");const users = await db.user.findMany({ where:status?{status:status as any}:{status:{notIn:["ARCHIVED","DELETED"]}},orderBy: { createdAt: "desc" }, select: { id: true, name: true, firstName:true,lastName:true,jobTitle:true,service:true,email: true,personalEmail:true,phone:true,personalPhone:true,messagingApps:true,notificationPreferences:true,urgentAlerts:true,avatarStorageKey:true, deletedAt:true, archivedAt:true,archiveReason:true,previousRole:true, role: true, status: true, permissions: true, supervisorId: true, region: true, wilaya: true, supervisor: { select: { id: true, name: true } }, mustChangePassword: true, lastLoginAt: true, createdAt: true, _count: { select: { documents: true, records: true, delegates: true } } } });
   return NextResponse.json({ users: users.map(u => ({ ...u, permissions: permissionsOf(u.permissions) })) });
 }
 

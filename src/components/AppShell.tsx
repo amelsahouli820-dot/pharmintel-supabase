@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
 
 type Role = "ADMIN"|"DIRECTOR_GENERAL"|"SUPERVISOR"|"DELEGATE";
@@ -50,7 +50,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
       <header className="topbar"><div className="topbar-left"><button className="icon-btn menu-button" onClick={() => setMobile(true)}><Menu size={22}/></button><div><span className="eyebrow">ESPACE DE VEILLE</span><h1>{title}</h1></div></div><div className="topbar-actions">
         <button className="icon-btn" onClick={toggleTheme} aria-label="Changer le thème">{theme === "dark" ? <Sun size={19}/> : <Moon size={19}/>}</button>
         <Link className="icon-btn notification-button" href="/alertes" aria-label="Alertes"><Bell size={19}/>{unread > 0 && <i>{Math.min(unread, 9)}</i>}</Link>
-        <div className="profile-wrap"><button className="profile-button" onClick={() => setProfile(!profile)}><span className="avatar">{user.name.split(" ").map(x => x[0]).slice(0,2).join("").toUpperCase()}</span><span className="profile-copy"><strong>{user.name}</strong><small>{roleLabels[user.role]}</small></span><ChevronDown size={15}/></button>{profile && <div className="profile-menu"><div><strong>{user.name}</strong><small>{user.email}</small></div><button onClick={logout}><LogOut size={16}/> Se déconnecter</button></div>}</div>
+        <div className="profile-wrap"><button className="profile-button" onClick={() => setProfile(!profile)}><span className="avatar">{user.name.split(" ").map(x => x[0]).slice(0,2).join("").toUpperCase()}</span><span className="profile-copy"><strong>{user.name}</strong><small>{roleLabels[user.role]}</small></span><ChevronDown size={15}/></button>{profile && <div className="profile-menu"><div><strong>{user.name}</strong><small>{user.email}</small></div><Link href="/profil" onClick={()=>setProfile(false)}><UserCircle size={16}/> Mon profil</Link><button onClick={logout}><LogOut size={16}/> Se déconnecter</button></div>}</div>
       </div></header>
       <main className="page-content">{children}</main>
     </div>

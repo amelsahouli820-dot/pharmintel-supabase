@@ -148,8 +148,19 @@ enum ProcessingJobStatus {
 model User {
   id                 String       @id @default(cuid())
   name               String
+  firstName          String?
+  lastName           String?
+  jobTitle           String?
+  service            String?
   email              String       @unique
+  personalEmail      String?
   phone              String?
+  personalPhone      String?
+  messagingApps      String[]      @default([])
+  notificationPreferences Json    @default("{\"professionalEmail\":true,\"personalEmail\":false,\"whatsapp\":false,\"viber\":false,\"telegram\":false,\"sms\":false}")
+  urgentAlerts       Boolean      @default(false)
+  avatarStorageKey   String?
+  avatarMime         String?
   passwordHash       String
   deletedAt          DateTime?
   archivedAt         DateTime?

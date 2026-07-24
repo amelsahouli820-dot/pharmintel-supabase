@@ -31,11 +31,20 @@ export const documentUpdateSchema = z.object({
 });
 
 export const registrationSchema = z.object({
-  name: z.string().trim().min(2, "Le nom est trop court").max(100),
-  email: z.string().email("Adresse e-mail invalide").max(254).transform(v => v.toLowerCase().trim())
+  firstName: z.string().trim().min(2,"Le prénom est requis").max(60), lastName:z.string().trim().min(2,"Le nom est requis").max(60),
+  jobTitle:z.string().trim().min(2,"La fonction est requise").max(120), service:z.string().trim().max(120).optional().default(""),
+  region:z.enum(["EST","OUEST","CENTRE","SUD"]), wilaya:z.string().trim().min(2,"La wilaya est requise").max(100),
+  email: z.string().email("Adresse professionnelle invalide").max(254).transform(v => v.toLowerCase().trim()),
+  personalEmail:z.union([z.string().email("Adresse personnelle invalide").max(254),z.literal("")]).optional().default(""),
+  phone:z.string().trim().min(6,"Le téléphone professionnel est requis").max(30), personalPhone:z.string().trim().max(30).optional().default(""),
+  messagingApps:z.array(z.enum(["WHATSAPP","VIBER","TELEGRAM","SMS"])).default([]),
+  notificationPreferences:z.object({professionalEmail:z.boolean(),personalEmail:z.boolean(),whatsapp:z.boolean(),viber:z.boolean(),telegram:z.boolean(),sms:z.boolean()}),
+  urgentAlerts:z.boolean().default(false)
 });
 
+export const profileUpdateSchema = registrationSchema.omit({urgentAlerts:true}).extend({urgentAlerts:z.boolean(),service:z.string().trim().max(120).optional().default("")});
+
 export const updateUserSchema = z.object({
-  name: z.string().trim().min(2).max(100).optional(), email:z.string().email().max(254).transform(v=>v.toLowerCase().trim()).optional(), phone:z.string().trim().max(30).nullable().optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "INACTIVE", "SUSPENDED", "REFUSED", "ARCHIVED", "DELETED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
-  permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean() }).optional(), temporaryPassword: z.string().min(12).max(128).optional()
+  name: z.string().trim().min(2).max(100).optional(), firstName:z.string().trim().min(2).max(60).optional(),lastName:z.string().trim().min(2).max(60).optional(),jobTitle:z.string().trim().max(120).nullable().optional(),service:z.string().trim().max(120).nullable().optional(), email:z.string().email().max(254).transform(v=>v.toLowerCase().trim()).optional(),personalEmail:z.union([z.string().email().max(254),z.literal(""),z.null()]).optional(), phone:z.string().trim().max(30).nullable().optional(),personalPhone:z.string().trim().max(30).nullable().optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "INACTIVE", "SUSPENDED", "REFUSED", "ARCHIVED", "DELETED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
+  permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean(),canEditOwn:z.boolean().optional(),canDeleteOwn:z.boolean().optional() }).optional(), temporaryPassword: z.string().min(12).max(128).optional()
 });
