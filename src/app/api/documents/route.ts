@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     wholesaler: String(form?.get("wholesaler") || ""), customWholesaler: String(form?.get("customWholesaler") || ""),
     documentType: String(form?.get("documentType") || ""), customDocumentType: String(form?.get("customDocumentType") || ""),
     documentDate: String(form?.get("documentDate") || ""), receivedAt: String(form?.get("receivedAt") || ""),
-    region: String(form?.get("region") || ""), wilaya: String(form?.get("wilaya") || ""), laboratory: String(form?.get("laboratory") || ""), comments: String(form?.get("comments") || ""),
+    region: String(form?.get("region") || ""), wilaya: String(form?.get("wilaya") || ""), product:String(form?.get("product")||""), laboratory: String(form?.get("laboratory") || ""), comments: String(form?.get("comments") || ""),
     confidentiality: String(form?.get("confidentiality") || "INTERNAL"), priority: String(form?.get("priority") || "NORMAL")
   });
   if (!metadata.success) return badRequest(metadata.error.issues[0]?.message || "Métadonnées invalides.");
