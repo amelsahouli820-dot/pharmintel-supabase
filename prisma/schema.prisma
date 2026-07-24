@@ -128,6 +128,9 @@ enum AlertType {
   SECURITY_LOGIN_FAILED
   NEW_MESSAGE
   SYSTEM_ANNOUNCEMENT
+  PASSWORD_RECOVERY_REQUESTED
+  PASSWORD_CHANGED
+  SUPPORT_REQUEST
   DOCUMENT_IMPORTED
   INFORMATION_PENDING
   IMPORT_ERROR
@@ -196,6 +199,8 @@ model User {
   sessions            Session[]
   sentMessages        Message[] @relation("MessageSender")
   receivedMessages    Message[] @relation("MessageRecipient")
+  passwordResetTokens PasswordResetToken[]
+  importDrafts        ImportDraft[]
 
   @@index([status, role])
   @@index([status, archivedAt])
@@ -515,6 +520,65 @@ model Message {
   @@index([recipientId, readAt, createdAt])
   @@index([senderId, createdAt])
   @@map("messages")
+}
+
+model ImportDraft {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  metadata  Json
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  files     ImportDraftFile[]
+
+  @@index([userId, updatedAt])
+  @@map("import_drafts")
+}
+
+model ImportDraftFile {
+  id           String      @id @default(cuid())
+  draftId      String
+  draft        ImportDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  originalName String
+  storageKey   String      @unique
+  mimeType     String
+  size         Int
+  sha256       String
+  createdAt    DateTime    @default(now())
+
+  @@index([draftId])
+  @@map("import_draft_files")
+}
+
+model PasswordResetToken {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  attempts    Int      @default(0)
+  requestedIp String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([expiresAt, usedAt])
+  @@map("password_reset_tokens")
+}
+
+model SupportRequest {
+  id         String   @id @default(cuid())
+  name       String
+  contact    String
+  message    String   @db.Text
+  status     String   @default("OPEN")
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+
+  @@index([status, createdAt])
+  @@map("support_requests")
 }
 
 model AuditLog {
