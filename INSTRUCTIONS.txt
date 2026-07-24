@@ -1,26 +1,18 @@
-PHARMINTEL V2 — PHASE 7 : CORRECTIFS CARTE ET CORBEILLE UTILISATEURS
+PHARMINTEL V2 — PHASE 7.1 : NAVIGATION FLUIDE CARTE
 
 Déploiement : GitHub > Add file > Upload files > glisser prisma, src et public > Commit changes.
 
-Carte :
-- clic illimité ;
-- second clic = désélection ;
-- multi-sélection ;
-- tout sélectionner / tout désélectionner / réinitialiser ;
-- panneau latéral non bloquant avec tous les indicateurs ;
-- navigation entre wilayas sans verrouillage ;
-- lignes inter-wilayas conservées pour les confirmations croisées.
-
-Utilisateurs :
-- désactivation immédiate ;
-- archivage par défaut avec motif ;
-- corbeille Utilisateurs archivés ;
-- restauration en statut inactif ;
-- suppression définitive par anonymisation irréversible ;
-- documents, informations, validations et audit toujours conservés ;
-- transfert optionnel des documents ;
-- filtres actifs, inactifs, en attente, suspendus et refusés ;
-- toutes les actions journalisées ;
-- administration exclusive.
+Correctifs :
+- mode Navigation activé par défaut : une seule wilaya active ;
+- clic sur une autre wilaya : remplacement instantané de la sélection ;
+- second clic sur la wilaya active : désélection ;
+- filtres conservés pendant toute la navigation ;
+- aucune requête ni rechargement de page lors d’un changement de wilaya ;
+- panneau latéral mis à jour instantanément ;
+- couleur vert foncé et contour doré pour la wilaya active ;
+- effet de survol renforcé ;
+- mode Comparaison séparé pour la multi-sélection ;
+- Réinitialiser la sélection ne supprime plus les filtres ;
+- bouton distinct Effacer les filtres.
 
 Build Next.js et TypeScript vérifiés.
