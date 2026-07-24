@@ -9,7 +9,8 @@ type Role = "ADMIN"|"DIRECTOR_GENERAL"|"SUPERVISOR"|"DELEGATE";
 type User = { id: string; name: string; email: string; role: Role };
 const roleLabels:Record<Role,string>={ADMIN:"Administrateur",DIRECTOR_GENERAL:"Directeur Général",SUPERVISOR:"Superviseur",DELEGATE:"Délégué"};
 const links = [
-  { href: "/tableau-de-bord", label: "Vue d’ensemble", icon: LayoutDashboard },
+  { href: "/accueil", label: "Accueil", icon: LayoutDashboard },
+  { href: "/tableau-de-bord", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/imports", label: "Importer", icon: UploadCloud },
   { href: "/documents", label: "Documents", icon: Database },
   { href: "/nouvelle-information", label: "Nouvelle information", icon: PlusCircle },

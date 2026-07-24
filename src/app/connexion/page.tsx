@@ -11,7 +11,7 @@ export default function LoginPage() {
     const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: form.get("email"), password: form.get("password") }) });
     const data = await response.json(); setLoading(false);
     if (!response.ok) return setError(data.error || "Connexion impossible.");
-    router.replace(data.mustChangePassword ? "/mot-de-passe" : "/tableau-de-bord"); router.refresh();
+    router.replace(data.mustChangePassword ? "/mot-de-passe" : "/accueil"); router.refresh();
   }
   return <main className="login-page">
     <section className="login-visual">

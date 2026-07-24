@@ -1,18 +1,23 @@
-PHARMINTEL V2 — PHASE 7.1 : NAVIGATION FLUIDE CARTE
+PHARMINTEL V2 — PHASE 8 : PAGE D’ACCUEIL PROFESSIONNELLE
 
 Déploiement : GitHub > Add file > Upload files > glisser prisma, src et public > Commit changes.
 
-Correctifs :
-- mode Navigation activé par défaut : une seule wilaya active ;
-- clic sur une autre wilaya : remplacement instantané de la sélection ;
-- second clic sur la wilaya active : désélection ;
-- filtres conservés pendant toute la navigation ;
-- aucune requête ni rechargement de page lors d’un changement de wilaya ;
-- panneau latéral mis à jour instantanément ;
-- couleur vert foncé et contour doré pour la wilaya active ;
-- effet de survol renforcé ;
-- mode Comparaison séparé pour la multi-sélection ;
-- Réinitialiser la sélection ne supprime plus les filtres ;
-- bouton distinct Effacer les filtres.
+Contenu :
+- accueil par défaut après connexion ;
+- bienvenue personnalisée, date, dernière connexion, nom et fonction ;
+- six cartes essentielles et interactives ;
+- carte administrative officielle actuelle (69 wilayas) interactive ;
+- changement instantané de wilaya sans rechargement ;
+- résumé territorial dans un panneau léger ;
+- cinq dernières activités ;
+- alertes prioritaires uniquement ;
+- accès rapides adaptés au rôle ;
+- score personnel pour le délégué ;
+- activité d’équipe pour le superviseur ;
+- vue stratégique pour la direction ;
+- administration et inscriptions pour l’administrateur ;
+- actualisation automatique toutes les 60 secondes ;
+- design épuré sans graphiques volumineux ni tableaux complexes.
 
+Le découpage officiel actuel est de 69 wilayas selon la loi n° 26-06 du 4 avril 2026.
 Build Next.js et TypeScript vérifiés.
