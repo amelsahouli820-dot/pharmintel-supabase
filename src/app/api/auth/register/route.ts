@@ -12,10 +12,11 @@ export async function POST(request: NextRequest) {
   const parsed = registrationSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return badRequest(parsed.error.issues[0]?.message || "Informations invalides.");
 
+  const wilayaRef=await db.referenceEntity.findFirst({where:{type:"WILAYA",name:parsed.data.wilaya,active:true},select:{region:true}});if(!wilayaRef?.region)return badRequest("Sélectionnez une wilaya valide.");
   const existing = await db.user.findUnique({ where: { email: parsed.data.email }, select: { id: true } });
   if (!existing) {
     const user = await db.user.create({ data: {
-      name: `${parsed.data.firstName} ${parsed.data.lastName}`,firstName:parsed.data.firstName,lastName:parsed.data.lastName,jobTitle:parsed.data.jobTitle,service:parsed.data.service||null,email: parsed.data.email,personalEmail:parsed.data.personalEmail||null,phone:parsed.data.phone,personalPhone:parsed.data.personalPhone||null,region:parsed.data.region,wilaya:parsed.data.wilaya,messagingApps:parsed.data.messagingApps,notificationPreferences:parsed.data.notificationPreferences,urgentAlerts:parsed.data.urgentAlerts,
+      name: `${parsed.data.firstName} ${parsed.data.lastName}`,firstName:parsed.data.firstName,lastName:parsed.data.lastName,jobTitle:parsed.data.jobTitle,service:parsed.data.service||null,email: parsed.data.email,personalEmail:parsed.data.personalEmail||null,phone:parsed.data.phone,personalPhone:parsed.data.personalPhone||null,region:wilayaRef.region,wilaya:parsed.data.wilaya,messagingApps:parsed.data.messagingApps,notificationPreferences:parsed.data.notificationPreferences,urgentAlerts:parsed.data.urgentAlerts,
       passwordHash: await bcrypt.hash(randomBytes(48).toString("base64url"), 12),
       role: "DELEGATE", status: "PENDING", mustChangePassword: true,
       permissions: { canImport: true, canUseAI: true, canExport: true }

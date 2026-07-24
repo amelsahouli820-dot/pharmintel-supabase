@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     confidentiality: String(form?.get("confidentiality") || "INTERNAL"), priority: String(form?.get("priority") || "NORMAL")
   });
   if (!metadata.success) return badRequest(metadata.error.issues[0]?.message || "Métadonnées invalides.");
+  const wilayaRef=metadata.data.wilaya?await db.referenceEntity.findFirst({where:{type:"WILAYA",name:metadata.data.wilaya,active:true},select:{region:true}}):null;if(metadata.data.wilaya&&!wilayaRef)return badRequest("Sélectionnez une wilaya valide.");
   const ext = path.extname(file.name).toLowerCase();
   if (!allowedExtensions.has(ext)) return badRequest("Format non pris en charge. Utilisez PDF, Word, Excel, image, CSV ou texte.");
   const maxBytes = (Number(process.env.MAX_UPLOAD_MB) || 25) * 1024 * 1024;
@@ -49,13 +50,13 @@ export async function POST(request: NextRequest) {
   const sha256 = createHash("sha256").update(buffer).digest("hex");
   const duplicate = await db.document.findFirst({ where: { sha256, status: { in: ["WAITING_AI", "PENDING", "PROCESSING", "COMPLETED"] } }, select: { id: true,userId:true,records:true } });
   if (duplicate?.userId===user.id) { await db.scoreEvent.create({ data: { userId: user.id, documentId: duplicate.id, points: -5, reason: "DUPLICATE_DOCUMENT", details: file.name } }).catch(()=>undefined); return NextResponse.json({ error: "Vous avez déjà importé ce document. Une pénalité de 5 points a été appliquée.", documentId: duplicate.id }, { status: 409 }); }
-  if(duplicate){await db.documentConfirmation.upsert({where:{canonicalDocumentId_userId:{canonicalDocumentId:duplicate.id,userId:user.id}},create:{canonicalDocumentId:duplicate.id,userId:user.id,region:user.region||metadata.data.region||null,wilaya:user.wilaya||null,comment:metadata.data.comments||null},update:{region:user.region||metadata.data.region||null,wilaya:user.wilaya||null,comment:metadata.data.comments||null}});for(const record of duplicate.records)await linkSignal({recordId:record.id,documentId:duplicate.id,userId:user.id,wholesaler:record.wholesaler,laboratory:record.laboratory,product:record.product,offerType:record.offerType,region:user.region||metadata.data.region,wilaya:user.wilaya});await audit(user.id,"DUPLICATE_CONFIRMED","Document",duplicate.id,{name:file.name},clientIp(request));return NextResponse.json({documentId:duplicate.id,grouped:true,message:"Document identique regroupé comme confirmation."},{status:200})}
+  if(duplicate){await db.documentConfirmation.upsert({where:{canonicalDocumentId_userId:{canonicalDocumentId:duplicate.id,userId:user.id}},create:{canonicalDocumentId:duplicate.id,userId:user.id,region:user.region||wilayaRef?.region||metadata.data.region||null,wilaya:user.wilaya||null,comment:metadata.data.comments||null},update:{region:user.region||wilayaRef?.region||metadata.data.region||null,wilaya:user.wilaya||null,comment:metadata.data.comments||null}});for(const record of duplicate.records)await linkSignal({recordId:record.id,documentId:duplicate.id,userId:user.id,wholesaler:record.wholesaler,laboratory:record.laboratory,product:record.product,offerType:record.offerType,region:user.region||wilayaRef?.region||metadata.data.region,wilaya:user.wilaya});await audit(user.id,"DUPLICATE_CONFIRMED","Document",duplicate.id,{name:file.name},clientIp(request));return NextResponse.json({documentId:duplicate.id,grouped:true,message:"Document identique regroupé comme confirmation."},{status:200})}
   const safeName = file.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-").slice(-120);
   const key = `${user.id}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
   try { await putFile(key, buffer, file.type || "application/octet-stream"); }
   catch (error) { return NextResponse.json({ error: `Stockage impossible : ${error instanceof Error ? error.message : "service indisponible"}` }, { status: 503 }); }
   const aiReady = Boolean(process.env.OPENAI_API_KEY);
-  const m = metadata.data;
+  const m = {...metadata.data,region:wilayaRef?.region||metadata.data.region};
   const toDate = (value: string) => value ? new Date(`${value}T12:00:00.000Z`) : null;
   const document = await db.document.create({ data: {
     userId: user.id, originalName: file.name.slice(0, 255), storageKey: key, mimeType: file.type || "application/octet-stream", size: file.size, sha256,
