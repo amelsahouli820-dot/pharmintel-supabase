@@ -36,6 +36,6 @@ export const registrationSchema = z.object({
 });
 
 export const updateUserSchema = z.object({
-  name: z.string().trim().min(2).max(100).optional(), email:z.string().email().max(254).transform(v=>v.toLowerCase().trim()).optional(), phone:z.string().trim().max(30).nullable().optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "INACTIVE", "SUSPENDED", "REFUSED", "DELETED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
+  name: z.string().trim().min(2).max(100).optional(), email:z.string().email().max(254).transform(v=>v.toLowerCase().trim()).optional(), phone:z.string().trim().max(30).nullable().optional(), role: z.enum(["ADMIN", "DIRECTOR_GENERAL", "SUPERVISOR", "DELEGATE"]).optional(), status: z.enum(["PENDING", "ACTIVE", "INACTIVE", "SUSPENDED", "REFUSED", "ARCHIVED", "DELETED"]).optional(), supervisorId: z.string().cuid().nullable().optional(), region: z.enum(["EST","OUEST","CENTRE","SUD"]).nullable().optional(), wilaya: z.string().trim().max(100).nullable().optional(),
   permissions: z.object({ canImport: z.boolean(), canUseAI: z.boolean(), canExport: z.boolean() }).optional(), temporaryPassword: z.string().min(12).max(128).optional()
 });

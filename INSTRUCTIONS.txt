@@ -1,22 +1,26 @@
-PHARMINTEL V2 — PHASE 6 : CARTE ADMINISTRATIVE OFFICIELLE 69 WILAYAS
+PHARMINTEL V2 — PHASE 7 : CORRECTIFS CARTE ET CORBEILLE UTILISATEURS
 
-Important : depuis la loi n° 26-06 du 4 avril 2026, le découpage officiel compte 69 wilayas.
+Déploiement : GitHub > Add file > Upload files > glisser prisma, src et public > Commit changes.
 
-Déploiement GitHub :
-- glisser prisma
-- glisser src
-- glisser public
-- Commit changes
+Carte :
+- clic illimité ;
+- second clic = désélection ;
+- multi-sélection ;
+- tout sélectionner / tout désélectionner / réinitialiser ;
+- panneau latéral non bloquant avec tous les indicateurs ;
+- navigation entre wilayas sans verrouillage ;
+- lignes inter-wilayas conservées pour les confirmations croisées.
 
-Fonctions :
-- véritable fond SVG administratif, chaque wilaya est un tracé indépendant ;
-- 69 wilayas cliquables et survolables ;
-- couleurs dynamiques faible/moyenne/élevée/très élevée ;
-- tooltip documents, terrain, validations, attentes, grossistes, laboratoires, délégués ;
-- filtres métrique, région, grossiste, laboratoire, produit, type et période ;
-- liaisons entre wilayas confirmant un même signal ;
-- page détaillée de chaque wilaya ;
-- raccourcis du dashboard synchronisés avec la carte ;
-- attribution des sources cartographiques MIT incluse dans public/maps/ATTRIBUTION.txt.
+Utilisateurs :
+- désactivation immédiate ;
+- archivage par défaut avec motif ;
+- corbeille Utilisateurs archivés ;
+- restauration en statut inactif ;
+- suppression définitive par anonymisation irréversible ;
+- documents, informations, validations et audit toujours conservés ;
+- transfert optionnel des documents ;
+- filtres actifs, inactifs, en attente, suspendus et refusés ;
+- toutes les actions journalisées ;
+- administration exclusive.
 
 Build Next.js et TypeScript vérifiés.

@@ -21,6 +21,7 @@ enum UserStatus {
   INACTIVE
   SUSPENDED
   REFUSED
+  ARCHIVED
   DELETED
 }
 
@@ -151,6 +152,9 @@ model User {
   phone              String?
   passwordHash       String
   deletedAt          DateTime?
+  archivedAt         DateTime?
+  archiveReason      String?
+  previousRole       Role?
   role               Role         @default(DELEGATE)
   status             UserStatus   @default(ACTIVE)
   supervisorId       String?
@@ -181,6 +185,7 @@ model User {
   receivedMessages    Message[] @relation("MessageRecipient")
 
   @@index([status, role])
+  @@index([status, archivedAt])
   @@index([supervisorId])
   @@map("users")
 }

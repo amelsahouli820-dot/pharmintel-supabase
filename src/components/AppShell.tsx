@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
 
 type Role = "ADMIN"|"DIRECTOR_GENERAL"|"SUPERVISOR"|"DELEGATE";
@@ -40,7 +40,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
       <nav className="nav-list" aria-label="Navigation principale">
         <p className="nav-label">ESPACE DE VEILLE</p>
         {visibleLinks.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setMobile(false)} className={pathname.startsWith(href) ? "active" : ""}><Icon size={19}/><span>{label}</span>{href === "/alertes" && unread > 0 && <b className="nav-badge">{unread}</b>}</Link>)}
-        {user.role === "ADMIN" && <><p className="nav-label nav-separator">ADMINISTRATION</p><Link href="/utilisateurs" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs") ? "active" : ""}><Users size={19}/><span>Utilisateurs</span></Link><Link href="/administration" onClick={() => setMobile(false)} className={pathname.startsWith("/administration") ? "active" : ""}><Settings size={19}/><span>Centre d’administration</span></Link><Link href="/referentiels" onClick={() => setMobile(false)} className={pathname.startsWith("/referentiels") ? "active" : ""}><Building2 size={19}/><span>Référentiels</span></Link><Link href="/journal" onClick={() => setMobile(false)} className={pathname.startsWith("/journal") ? "active" : ""}><ScrollText size={19}/><span>Journal d’activité</span></Link></>}
+        {user.role === "ADMIN" && <><p className="nav-label nav-separator">ADMINISTRATION</p><Link href="/utilisateurs" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs") ? "active" : ""}><Users size={19}/><span>Utilisateurs</span></Link><Link href="/administration" onClick={() => setMobile(false)} className={pathname.startsWith("/administration") ? "active" : ""}><Settings size={19}/><span>Centre d’administration</span></Link><Link href="/utilisateurs-archives" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs-archives") ? "active" : ""}><Archive size={19}/><span>Utilisateurs archivés</span></Link><Link href="/referentiels" onClick={() => setMobile(false)} className={pathname.startsWith("/referentiels") ? "active" : ""}><Building2 size={19}/><span>Référentiels</span></Link><Link href="/journal" onClick={() => setMobile(false)} className={pathname.startsWith("/journal") ? "active" : ""}><ScrollText size={19}/><span>Journal d’activité</span></Link></>}
       </nav>
       <div className="sidebar-foot"><div className="secure-chip"><ShieldCheck size={16}/><span><strong>Espace sécurisé</strong><small>Chiffrement actif</small></span></div><span className="version">PharmIntel v1.0</span></div>
     </aside>
