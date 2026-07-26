@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle, Languages } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle, Languages, GraduationCap, Megaphone } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
 import { LanguageSelector } from "./LanguageSelector";
 
@@ -20,7 +20,9 @@ const links = [
   { href: "/croisement", label: "Croisement national", icon: MapPinned },
   { href: "/assistant", label: "Assistant IA", icon: Sparkles },
   { href: "/alertes", label: "Alertes", icon: Bell },
-  { href: "/messages", label: "Messagerie", icon: MessageCircle }
+  { href: "/messages", label: "Messagerie", icon: MessageCircle },
+  { href: "/formations", label: "Formations", icon: GraduationCap },
+  { href: "/communications", label: "Communication", icon: Megaphone }
 ];
 
 export function AppShell({ user, children }: { user: User; children: React.ReactNode }) {

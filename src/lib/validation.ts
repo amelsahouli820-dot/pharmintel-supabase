@@ -11,6 +11,7 @@ export const createUserSchema = z.object({
 export const documentMetadataSchema = z.object({
   wholesaler: z.string().trim().min(1, "Sélectionnez un grossiste").max(150),
   customWholesaler: z.string().trim().max(150).optional().default(""),
+  watchTypeId: z.string().trim().min(1, "Sélectionnez un type de veille"), customWatchType:z.string().trim().max(150).optional().default(""),
   documentType: z.enum(["FLASH_SALE","RESTOCK","COMMERCIAL_PROPOSAL","QUOTA","PROMOTION","CONVENTION","REBATE","EXCEPTIONAL_DISCOUNT","PRICING","CATALOG","STOCKOUT","PRODUCT_LAUNCH","COMMERCIAL_COMMUNICATION","LAB_INFORMATION","LETTER","EMAIL","OTHER"]),
   customDocumentType: z.string().trim().max(150).optional().default(""),
   documentDate: z.string().optional().default(""), receivedAt: z.string().optional().default(""),
@@ -19,6 +20,7 @@ export const documentMetadataSchema = z.object({
   confidentiality: z.enum(["INTERNAL","CONFIDENTIAL","HIGHLY_CONFIDENTIAL"]).default("INTERNAL"),
   priority: z.enum(["LOW","NORMAL","HIGH","URGENT"]).default("NORMAL")
 }).superRefine((value, ctx) => {
+  if (value.watchTypeId === "watch-other" && !value.customWatchType) ctx.addIssue({code:z.ZodIssueCode.custom,path:["customWatchType"],message:"Précisez le type de veille"});
   if (value.wholesaler === "OTHER" && !value.customWholesaler) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["customWholesaler"], message: "Précisez le grossiste" });
   if (value.documentType === "OTHER" && !value.customDocumentType) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["customDocumentType"], message: "Précisez le type de document" });
 });
