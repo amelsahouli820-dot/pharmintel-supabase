@@ -164,6 +164,7 @@ model User {
   messagingApps      String[]      @default([])
   notificationPreferences Json    @default("{\"professionalEmail\":true,\"personalEmail\":false,\"whatsapp\":false,\"viber\":false,\"telegram\":false,\"sms\":false}")
   urgentAlerts       Boolean      @default(false)
+  locale             String       @default("fr")
   avatarStorageKey   String?
   avatarMime         String?
   passwordHash       String
@@ -579,6 +580,33 @@ model SupportRequest {
 
   @@index([status, createdAt])
   @@map("support_requests")
+}
+
+model AppLanguage {
+  code       String   @id
+  name       String
+  nativeName String
+  direction  String   @default("ltr")
+  active     Boolean  @default(true)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  translations UiTranslation[]
+
+  @@map("app_languages")
+}
+
+model UiTranslation {
+  id           String      @id @default(cuid())
+  languageCode String
+  language     AppLanguage @relation(fields: [languageCode], references: [code], onDelete: Cascade)
+  key          String
+  value        String      @db.Text
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([languageCode, key])
+  @@index([languageCode])
+  @@map("ui_translations")
 }
 
 model AuditLog {
