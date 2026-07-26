@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle, Languages } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
+import { LanguageSelector } from "./LanguageSelector";
 
 type Role = "ADMIN"|"DIRECTOR_GENERAL"|"SUPERVISOR"|"DELEGATE";
-type User = { id: string; name: string; email: string; role: Role };
+type User = { id: string; name: string; email: string; role: Role; locale?:string };
 const roleLabels:Record<Role,string>={ADMIN:"Administrateur",DIRECTOR_GENERAL:"Directeur Général",SUPERVISOR:"Superviseur",DELEGATE:"Délégué"};
 const links = [
   { href: "/accueil", label: "Accueil", icon: LayoutDashboard },
@@ -41,13 +42,14 @@ export function AppShell({ user, children }: { user: User; children: React.React
       <nav className="nav-list" aria-label="Navigation principale">
         <p className="nav-label">ESPACE DE VEILLE</p>
         {visibleLinks.map(({ href, label, icon: Icon }) => <Link key={href} href={href} onClick={() => setMobile(false)} className={pathname.startsWith(href) ? "active" : ""}><Icon size={19}/><span>{label}</span>{href === "/alertes" && unread > 0 && <b className="nav-badge">{unread}</b>}</Link>)}
-        {user.role === "ADMIN" && <><p className="nav-label nav-separator">ADMINISTRATION</p><Link href="/utilisateurs" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs") ? "active" : ""}><Users size={19}/><span>Utilisateurs</span></Link><Link href="/administration" onClick={() => setMobile(false)} className={pathname.startsWith("/administration") ? "active" : ""}><Settings size={19}/><span>Centre d’administration</span></Link><Link href="/utilisateurs-archives" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs-archives") ? "active" : ""}><Archive size={19}/><span>Utilisateurs archivés</span></Link><Link href="/referentiels" onClick={() => setMobile(false)} className={pathname.startsWith("/referentiels") ? "active" : ""}><Building2 size={19}/><span>Paramètres / Référentiels</span></Link><Link href="/journal" onClick={() => setMobile(false)} className={pathname.startsWith("/journal") ? "active" : ""}><ScrollText size={19}/><span>Journal d’activité</span></Link></>}
+        {user.role === "ADMIN" && <><p className="nav-label nav-separator">ADMINISTRATION</p><Link href="/utilisateurs" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs") ? "active" : ""}><Users size={19}/><span>Utilisateurs</span></Link><Link href="/administration" onClick={() => setMobile(false)} className={pathname.startsWith("/administration") ? "active" : ""}><Settings size={19}/><span>Centre d’administration</span></Link><Link href="/utilisateurs-archives" onClick={() => setMobile(false)} className={pathname.startsWith("/utilisateurs-archives") ? "active" : ""}><Archive size={19}/><span>Utilisateurs archivés</span></Link><Link href="/referentiels" onClick={() => setMobile(false)} className={pathname.startsWith("/referentiels") ? "active" : ""}><Building2 size={19}/><span>Paramètres / Référentiels</span></Link><Link href="/langues" onClick={() => setMobile(false)} className={pathname.startsWith("/langues") ? "active" : ""}><Languages size={19}/><span>Langues / Traductions</span></Link><Link href="/journal" onClick={() => setMobile(false)} className={pathname.startsWith("/journal") ? "active" : ""}><ScrollText size={19}/><span>Journal d’activité</span></Link></>}
       </nav>
       <div className="sidebar-foot"><div className="secure-chip"><ShieldCheck size={16}/><span><strong>Espace sécurisé</strong><small>Chiffrement actif</small></span></div><span className="version">PharmIntel v1.0</span></div>
     </aside>
     {mobile && <button className="sidebar-scrim" onClick={() => setMobile(false)} aria-label="Fermer le menu"/>}
     <div className="app-main">
       <header className="topbar"><div className="topbar-left"><button className="icon-btn menu-button" onClick={() => setMobile(true)}><Menu size={22}/></button><div><span className="eyebrow">ESPACE DE VEILLE</span><h1>{title}</h1></div></div><div className="topbar-actions">
+        <LanguageSelector />
         <button className="icon-btn" onClick={toggleTheme} aria-label="Changer le thème">{theme === "dark" ? <Sun size={19}/> : <Moon size={19}/>}</button>
         <Link className="icon-btn notification-button" href="/alertes" aria-label="Alertes"><Bell size={19}/>{unread > 0 && <i>{Math.min(unread, 9)}</i>}</Link>
         <div className="profile-wrap"><button className="profile-button" onClick={() => setProfile(!profile)}><span className="avatar">{user.name.split(" ").map(x => x[0]).slice(0,2).join("").toUpperCase()}</span><span className="profile-copy"><strong>{user.name}</strong><small>{roleLabels[user.role]}</small></span><ChevronDown size={15}/></button>{profile && <div className="profile-menu"><div><strong>{user.name}</strong><small>{user.email}</small></div><Link href="/profil" onClick={()=>setProfile(false)}><UserCircle size={16}/> Mon profil</Link><button onClick={logout}><LogOut size={16}/> Se déconnecter</button></div>}</div>
