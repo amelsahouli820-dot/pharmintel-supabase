@@ -1,0 +1,1 @@
+import{redirect}from"next/navigation";import{requireSession}from"@/lib/auth";import{LanguageManager}from"@/components/LanguageManager";export default async function Page(){const u=await requireSession();if(u.role!=="ADMIN")redirect("/accueil");return <LanguageManager/>}

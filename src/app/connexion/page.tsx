@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck, BrainCircuit, LineChart, CheckCircle2, AlertCircle, UserPlus, KeyRound, HelpCircle } from "lucide-react";
 
 export default function LoginPage() {
@@ -24,7 +25,7 @@ export default function LoginPage() {
         <div className="login-proof"><div className="proof-avatars"><i>AM</i><i>KB</i><i>SL</i><i>+8</i></div><p><span>●●●●●</span><small>Une information fiable, au bon moment.</small></p></div>
       </div>
     </section>
-    <section className="login-form-side"><div className="login-mobile-brand"><span className="brand-mark"><span>+</span></span><b>PharmIntel</b></div><form className="login-card" onSubmit={submit}>
+    <section className="login-form-side"><div className="login-language"><LanguageSelector/></div><div className="login-mobile-brand"><span className="brand-mark"><span>+</span></span><b>PharmIntel</b></div><form className="login-card" onSubmit={submit}>
       <div className="login-icon"><LockKeyhole size={23}/></div><h2>Bienvenue</h2><p className="login-subtitle">Connectez-vous à votre espace de veille sécurisé</p>
       {error && <div className="form-alert"><AlertCircle size={16}/><span>{error}</span></div>}
       <div className="field login-field"><label htmlFor="email">Adresse e-mail professionnelle</label><div className="input-icon"><Mail size={17}/><input id="email" name="email" type="email" placeholder="nom@entreprise.dz" autoComplete="email" required autoFocus/></div></div>
