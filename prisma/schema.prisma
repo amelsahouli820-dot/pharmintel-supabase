@@ -90,6 +90,7 @@ enum ReferenceEntityType {
   COMPETITOR
   WILAYA
   DOCUMENT_TYPE
+  WATCH_TYPE
   OTHER
 }
 
@@ -98,6 +99,35 @@ enum SignalStatus {
   CONFIRMED
   CONTRADICTORY
   TREND
+}
+
+enum TrainingMode {
+  IN_PERSON
+  REMOTE
+  HYBRID
+}
+
+enum TrainingStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum ParticipationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum CommunicationType {
+  SERVICE_NOTE
+  PROCEDURE
+  DIRECTION_INFO
+  NEW_PRODUCT
+  INTERNAL_PROMOTION
+  EVENT
+  NEWS
 }
 
 enum OfferType {
@@ -131,6 +161,9 @@ enum AlertType {
   PASSWORD_RECOVERY_REQUESTED
   PASSWORD_CHANGED
   SUPPORT_REQUEST
+  TRAINING_INVITATION
+  TRAINING_REMINDER
+  COMMUNICATION_PUBLISHED
   DOCUMENT_IMPORTED
   INFORMATION_PENDING
   IMPORT_ERROR
@@ -202,6 +235,9 @@ model User {
   receivedMessages    Message[] @relation("MessageRecipient")
   passwordResetTokens PasswordResetToken[]
   importDrafts        ImportDraft[]
+  trainingsCreated   Training[] @relation("TrainingCreator")
+  trainingInvitations TrainingInvitation[]
+  communicationsCreated Communication[] @relation("CommunicationAuthor")
 
   @@index([status, role])
   @@index([status, archivedAt])
@@ -233,6 +269,9 @@ model Document {
   customWholesaler String?
   documentType DocumentType             @default(OTHER)
   customDocumentType String?
+  watchTypeId  String?
+  watchType    ReferenceEntity?         @relation("DocumentWatchType", fields: [watchTypeId], references: [id], onDelete: SetNull)
+  customWatchType String?
   documentDate DateTime?
   receivedAt   DateTime?
   region       String?
@@ -258,6 +297,7 @@ model Document {
   @@index([assignedToId, createdAt])
   @@index([status, createdAt])
   @@index([documentType, createdAt])
+  @@index([watchTypeId, createdAt])
   @@index([wholesaler, createdAt])
   @@map("documents")
 }
@@ -336,6 +376,7 @@ model ReferenceEntity {
   active    Boolean             @default(true)
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
+  documentsByWatchType Document[] @relation("DocumentWatchType")
 
   @@unique([type, name])
   @@unique([type, code])
@@ -580,6 +621,97 @@ model SupportRequest {
 
   @@index([status, createdAt])
   @@map("support_requests")
+}
+
+model Training {
+  id              String         @id @default(cuid())
+  title           String
+  description     String         @db.Text
+  objectives      String         @db.Text
+  trainer         String
+  startsAt        DateTime
+  durationMinutes Int
+  mode            TrainingMode
+  meetingProvider String?
+  meetingUrl      String?
+  location        String?
+  status          TrainingStatus @default(PUBLISHED)
+  audienceRole    Role?
+  audienceRegion  String?
+  createdById     String
+  createdBy       User           @relation("TrainingCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  invitations     TrainingInvitation[]
+  attachments     TrainingAttachment[]
+
+  @@index([startsAt, status])
+  @@map("trainings")
+}
+
+model TrainingInvitation {
+  id             String              @id @default(cuid())
+  trainingId     String
+  training       Training            @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status         ParticipationStatus @default(PENDING)
+  declineReason  String?
+  respondedAt    DateTime?
+  reminderSentAt DateTime?
+  createdAt      DateTime            @default(now())
+
+  @@unique([trainingId, userId])
+  @@index([userId, status])
+  @@map("training_invitations")
+}
+
+model TrainingAttachment {
+  id           String   @id @default(cuid())
+  trainingId   String
+  training     Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  name         String
+  storageKey   String?
+  mimeType     String?
+  size         Int?
+  externalUrl  String?
+  downloadCount Int     @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([trainingId])
+  @@map("training_attachments")
+}
+
+model Communication {
+  id          String            @id @default(cuid())
+  type        CommunicationType
+  title       String
+  content     String            @db.Text
+  priority    PriorityLevel     @default(NORMAL)
+  authorId    String
+  author      User              @relation("CommunicationAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  publishedAt DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  attachments CommunicationAttachment[]
+
+  @@index([publishedAt, type])
+  @@map("communications")
+}
+
+model CommunicationAttachment {
+  id              String        @id @default(cuid())
+  communicationId String
+  communication   Communication @relation(fields: [communicationId], references: [id], onDelete: Cascade)
+  name            String
+  storageKey      String?
+  mimeType        String?
+  size            Int?
+  externalUrl     String?
+  createdAt       DateTime      @default(now())
+
+  @@index([communicationId])
+  @@map("communication_attachments")
 }
 
 model AppLanguage {
