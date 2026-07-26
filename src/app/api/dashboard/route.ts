@@ -30,7 +30,7 @@ export async function GET() {
         ? db.$queryRaw<Array<{ month: Date; offers: bigint; flashes: bigint }>>(Prisma.sql`SELECT date_trunc('month', r."createdAt") AS month, COUNT(*) FILTER (WHERE r."offerType" IN ('OFFER','PROMOTION','DISCOUNT')) AS offers, COUNT(*) FILTER (WHERE r."offerType" = 'FLASH_SALE') AS flashes FROM intelligence_records r JOIN users u ON u.id=r."userId" WHERE r."createdAt" >= ${since6m} AND (r."userId"=${user.id} OR u."supervisorId"=${user.id}) GROUP BY 1 ORDER BY 1`)
         : db.$queryRaw<Array<{ month: Date; offers: bigint; flashes: bigint }>>(Prisma.sql`SELECT date_trunc('month', r."createdAt") AS month, COUNT(*) FILTER (WHERE r."offerType" IN ('OFFER','PROMOTION','DISCOUNT')) AS offers, COUNT(*) FILTER (WHERE r."offerType" = 'FLASH_SALE') AS flashes FROM intelligence_records r WHERE r."createdAt" >= ${since6m} AND r."userId" = ${user.id} GROUP BY 1 ORDER BY 1`)
   ]);
-  const [totalDocuments, manualInformations, validatedDocuments, rejectedDocuments, pendingDocuments, documentsByWholesaler, documentsByType, documentDates] = await Promise.all([
+  const [totalDocuments, manualInformations, validatedDocuments, rejectedDocuments, pendingDocuments, documentsByWholesaler, documentsByType, documentsByWatchType, watchTypeRefs, documentDates] = await Promise.all([
     db.document.count({ where: docScope }),
     db.document.count({ where: { ...docScope, sourceKind: "MANUAL" } }),
     db.document.count({ where: { ...docScope, reviewStatus: "VALIDATED" } }),
@@ -38,6 +38,8 @@ export async function GET() {
     db.document.count({ where: { ...docScope, reviewStatus: { in: ["PENDING","PENDING_AI","NEEDS_REVIEW","MODIFIED"] } } }),
     db.document.groupBy({ by:["wholesaler"], where:{...docScope,wholesaler:{not:null}}, _count:{_all:true}, orderBy:{_count:{wholesaler:"desc"}}, take:8 }),
     db.document.groupBy({ by:["documentType"], where:docScope, _count:{_all:true}, orderBy:{_count:{documentType:"desc"}}, take:10 }),
+    db.document.groupBy({by:["watchTypeId"],where:{...docScope,watchTypeId:{not:null}},_count:{_all:true},orderBy:{_count:{watchTypeId:"desc"}},take:15}),
+    db.referenceEntity.findMany({where:{type:"WATCH_TYPE",active:true},select:{id:true,name:true,metadata:true}}),
     db.document.findMany({ where:{...docScope,createdAt:{gte:startOfMonth(subMonths(new Date(),11))}}, select:{createdAt:true} })
   ]);
   const documentTypeCount=(type:string)=>documentsByType.find(x=>x.documentType===type)?._count._all||0;
@@ -51,6 +53,7 @@ export async function GET() {
     kpis: { offers, flashes, restocks, recordsTotal, documentsPending, totalDocuments, manualInformations, validatedDocuments, rejectedDocuments, pendingDocuments, promotionsDocuments:documentTypeCount("PROMOTION"), flashesDocuments:documentTypeCount("FLASH_SALE"), quotasDocuments:documentTypeCount("QUOTA") }, unreadAlerts, trend, annualTrend,
     documentsByWholesaler: documentsByWholesaler.map(x=>({name:x.wholesaler,count:x._count._all})),
     documentsByType: documentsByType.map(x=>({name:x.documentType,count:x._count._all})),
+    documentsByWatchType:documentsByWatchType.map(x=>{const ref=watchTypeRefs.find(r=>r.id===x.watchTypeId);return{id:x.watchTypeId,name:ref?.name||"Non classé",icon:(ref?.metadata as any)?.icon||"🔎",count:x._count._all}}),
     topWholesalers: topWholesalers.map(x => ({ name: x.wholesaler, count: x._count._all })),
     topLabs: topLabs.map(x => ({ name: x.laboratory, count: x._count._all })),
     topProducts: topProducts.map(x => ({ name: x.product, count: x._count._all })), recent

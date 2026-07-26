@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
   if (!user) return unauthorized();
   const page = Math.max(1, Number(request.nextUrl.searchParams.get("page")) || 1);
   const take = Math.min(50, Math.max(1, Number(request.nextUrl.searchParams.get("limit")) || 15));
-  const s=request.nextUrl.searchParams;const search=s.get("search")?.trim();const where:Prisma.DocumentWhereInput={...documentScope(user),...(s.get("reviewStatus")?{reviewStatus:s.get("reviewStatus") as any}:{}),...(s.get("sourceKind")?{sourceKind:s.get("sourceKind") as any}:{}),...(s.get("documentType")?{documentType:s.get("documentType") as any}:{}),...(s.get("wholesaler")?{wholesaler:{contains:s.get("wholesaler")!,mode:"insensitive"}}:{}),...(s.get("wilaya")?{wilaya:s.get("wilaya")!}:{}),...(s.get("userId")&&hasGlobalVision(user)?{userId:s.get("userId")!}:{}),...(search?{OR:[{originalName:{contains:search,mode:"insensitive"}},{wholesaler:{contains:search,mode:"insensitive"}},{laboratory:{contains:search,mode:"insensitive"}},{comments:{contains:search,mode:"insensitive"}}]}:{})};
+  const s=request.nextUrl.searchParams;const search=s.get("search")?.trim();const where:Prisma.DocumentWhereInput={...documentScope(user),...(s.get("reviewStatus")?{reviewStatus:s.get("reviewStatus") as any}:{}),...(s.get("sourceKind")?{sourceKind:s.get("sourceKind") as any}:{}),...(s.get("documentType")?{documentType:s.get("documentType") as any}:{}),...(s.get("watchTypeId")?{watchTypeId:s.get("watchTypeId")!}:{}),...(s.get("wholesaler")?{wholesaler:{contains:s.get("wholesaler")!,mode:"insensitive"}}:{}),...(s.get("wilaya")?{wilaya:s.get("wilaya")!}:{}),...(s.get("userId")&&hasGlobalVision(user)?{userId:s.get("userId")!}:{}),...(search?{OR:[{originalName:{contains:search,mode:"insensitive"}},{wholesaler:{contains:search,mode:"insensitive"}},{laboratory:{contains:search,mode:"insensitive"}},{comments:{contains:search,mode:"insensitive"}}]}:{})};
   const [items, total] = await Promise.all([
-    db.document.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * take, take, include: { user: { select: { name: true } }, _count: { select: { records: true, confirmations: true, validations: true, documentComments: true } } } }),
+    db.document.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * take, take, include: { user: { select: { name: true } }, watchType:{select:{id:true,name:true,code:true}}, _count: { select: { records: true, confirmations: true, validations: true, documentComments: true } } } }),
     db.document.count({ where })
   ]);
   return NextResponse.json({ items, total, page, pages: Math.ceil(total / take) });
@@ -34,13 +34,14 @@ export async function POST(request: NextRequest) {
   const file = form?.get("file");
   if (!(file instanceof File)) return badRequest("Sélectionnez un document à importer.");
   const metadata = documentMetadataSchema.safeParse({
-    wholesaler: String(form?.get("wholesaler") || ""), customWholesaler: String(form?.get("customWholesaler") || ""),
+    watchTypeId:String(form?.get("watchTypeId")||""),customWatchType:String(form?.get("customWatchType")||""),wholesaler: String(form?.get("wholesaler") || ""), customWholesaler: String(form?.get("customWholesaler") || ""),
     documentType: String(form?.get("documentType") || ""), customDocumentType: String(form?.get("customDocumentType") || ""),
     documentDate: String(form?.get("documentDate") || ""), receivedAt: String(form?.get("receivedAt") || ""),
     region: String(form?.get("region") || ""), wilaya: String(form?.get("wilaya") || ""), product:String(form?.get("product")||""), laboratory: String(form?.get("laboratory") || ""), comments: String(form?.get("comments") || ""),
     confidentiality: String(form?.get("confidentiality") || "INTERNAL"), priority: String(form?.get("priority") || "NORMAL")
   });
   if (!metadata.success) return badRequest(metadata.error.issues[0]?.message || "Métadonnées invalides.");
+  const watchRef=await db.referenceEntity.findFirst({where:{id:metadata.data.watchTypeId,type:"WATCH_TYPE",active:true}});if(!watchRef)return badRequest("Sélectionnez un type de veille valide.");if(watchRef.code==="OTHER"&&!metadata.data.customWatchType)return badRequest("Précisez le type de veille.");
   const wilayaRef=metadata.data.wilaya?await db.referenceEntity.findFirst({where:{type:"WILAYA",name:metadata.data.wilaya,active:true},select:{region:true}}):null;if(metadata.data.wilaya&&!wilayaRef)return badRequest("Sélectionnez une wilaya valide.");
   const ext = path.extname(file.name).toLowerCase();
   if (!allowedExtensions.has(ext)) return badRequest("Format non pris en charge. Utilisez PDF, Word, Excel, image, CSV ou texte.");
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     userId: user.id, originalName: file.name.slice(0, 255), storageKey: key, mimeType: file.type || "application/octet-stream", size: file.size, sha256,
     status: aiReady ? "PENDING" : "WAITING_AI", reviewStatus: aiReady ? "PENDING_AI" : "PENDING",
     wholesaler: m.wholesaler === "OTHER" ? m.customWholesaler : m.wholesaler, customWholesaler: m.wholesaler === "OTHER" ? m.customWholesaler : null,
-    documentType: m.documentType, customDocumentType: m.documentType === "OTHER" ? m.customDocumentType : null,
+    documentType: m.documentType, customDocumentType: m.documentType === "OTHER" ? m.customDocumentType : null, watchTypeId:m.watchTypeId,customWatchType:m.customWatchType||null,
     documentDate: toDate(m.documentDate), receivedAt: toDate(m.receivedAt) || new Date(), region: m.region || null, wilaya: m.wilaya || user.wilaya || null, laboratory: m.laboratory || null,
     comments: m.comments || null, confidentiality: m.confidentiality, priority: m.priority,
     scoreEvents: { create: [{ userId: user.id, points: 10, reason: "DOCUMENT_IMPORTED", details: file.name }, ...((m.wholesaler && m.documentType && m.documentDate && m.region && m.laboratory) ? [{ userId: user.id, points: 10, reason: "COMPLETE_INFORMATION", details: "Métadonnées complètes" }] : [])] },
