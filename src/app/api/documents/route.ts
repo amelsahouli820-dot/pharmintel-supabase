@@ -9,6 +9,7 @@ import { putFile } from "@/lib/storage";
 import { documentMetadataSchema } from "@/lib/validation";
 import { canImportDocuments, documentScope, hasGlobalVision } from "@/lib/access";
 import { linkSignal } from "@/lib/signals";
+import { calculateCommercial } from "@/lib/commercial";
 
 const allowedExtensions = new Set([".pdf", ".docx", ".xlsx", ".png", ".jpg", ".jpeg", ".webp", ".txt", ".csv"]);
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     watchTypeId:String(form?.get("watchTypeId")||""),customWatchType:String(form?.get("customWatchType")||""),wholesaler: String(form?.get("wholesaler") || ""), customWholesaler: String(form?.get("customWholesaler") || ""),
     documentType: String(form?.get("documentType") || ""), customDocumentType: String(form?.get("customDocumentType") || ""),
     documentDate: String(form?.get("documentDate") || ""), receivedAt: String(form?.get("receivedAt") || ""),
-    region: String(form?.get("region") || ""), wilaya: String(form?.get("wilaya") || ""), product:String(form?.get("product")||""), laboratory: String(form?.get("laboratory") || ""), comments: String(form?.get("comments") || ""),
+    region: String(form?.get("region") || ""), wilaya: String(form?.get("wilaya") || ""), product:String(form?.get("product")||""),priceHt:String(form?.get("priceHt")||""),discountPercent:String(form?.get("discountPercent")||""),ugPercent:String(form?.get("ugPercent")||""),offerText:String(form?.get("offerText")||""),offerBuyQty:String(form?.get("offerBuyQty")||""),offerFreeQty:String(form?.get("offerFreeQty")||""), laboratory: String(form?.get("laboratory") || ""), comments: String(form?.get("comments") || ""),
     confidentiality: String(form?.get("confidentiality") || "INTERNAL"), priority: String(form?.get("priority") || "NORMAL")
   });
   if (!metadata.success) return badRequest(metadata.error.issues[0]?.message || "Métadonnées invalides.");
@@ -58,14 +59,16 @@ export async function POST(request: NextRequest) {
   catch (error) { return NextResponse.json({ error: `Stockage impossible : ${error instanceof Error ? error.message : "service indisponible"}` }, { status: 503 }); }
   const aiReady = Boolean(process.env.OPENAI_API_KEY);
   const m = {...metadata.data,region:wilayaRef?.region||metadata.data.region};
+  const numberOrNull=(v:string)=>v!==""&&Number.isFinite(Number(v))?Number(v):null;const commercial=calculateCommercial({priceHt:numberOrNull(m.priceHt),discountPercent:numberOrNull(m.discountPercent),ugPercent:numberOrNull(m.ugPercent),offerText:m.offerText,offerBuyQty:numberOrNull(m.offerBuyQty),offerFreeQty:numberOrNull(m.offerFreeQty)});
   const toDate = (value: string) => value ? new Date(`${value}T12:00:00.000Z`) : null;
   const document = await db.document.create({ data: {
     userId: user.id, originalName: file.name.slice(0, 255), storageKey: key, mimeType: file.type || "application/octet-stream", size: file.size, sha256,
     status: aiReady ? "PENDING" : "WAITING_AI", reviewStatus: aiReady ? "PENDING_AI" : "PENDING",
     wholesaler: m.wholesaler === "OTHER" ? m.customWholesaler : m.wholesaler, customWholesaler: m.wholesaler === "OTHER" ? m.customWholesaler : null,
-    documentType: m.documentType, customDocumentType: m.documentType === "OTHER" ? m.customDocumentType : null, watchTypeId:m.watchTypeId,customWatchType:m.customWatchType||null,
+    documentType: m.documentType, customDocumentType: m.documentType === "OTHER" ? m.customDocumentType : null, watchTypeId:m.watchTypeId,customWatchType:m.customWatchType||null,commercialMetadata:{product:m.product,priceHt:numberOrNull(m.priceHt),...commercial},
     documentDate: toDate(m.documentDate), receivedAt: toDate(m.receivedAt) || new Date(), region: m.region || null, wilaya: m.wilaya || user.wilaya || null, laboratory: m.laboratory || null,
     comments: m.comments || null, confidentiality: m.confidentiality, priority: m.priority,
+    ...(!aiReady&&m.product&&(commercial.discountPercent!=null||commercial.ugPercent!=null||commercial.offerText)?{records:{create:{userId:user.id,observedAt:toDate(m.documentDate)||new Date(),wholesaler:m.wholesaler==="OTHER"?m.customWholesaler:m.wholesaler,laboratory:m.laboratory||null,product:m.product,priceHt:numberOrNull(m.priceHt),price:numberOrNull(m.priceHt),offerType:"PROMOTION",discountPercent:commercial.discountPercent,ugPercent:commercial.ugPercent,freeUnits:commercial.offerFreeQty,offerBuyQty:commercial.offerBuyQty,offerFreeQty:commercial.offerFreeQty,offerText:commercial.offerText,netPrice:commercial.netPrice,priceAfterUg:commercial.priceAfterUg,savings:commercial.savings,wilaya:m.wilaya||null,region:m.region||null,comments:m.comments||null,confidence:1,rawExtraction:{entryMode:"prefilled-commercial",...commercial}}}}:{}),
     scoreEvents: { create: [{ userId: user.id, points: 10, reason: "DOCUMENT_IMPORTED", details: file.name }, ...((m.wholesaler && m.documentType && m.documentDate && m.region && m.laboratory) ? [{ userId: user.id, points: 10, reason: "COMPLETE_INFORMATION", details: "Métadonnées complètes" }] : [])] },
     ...(aiReady ? { processingJob: { create: { status: "QUEUED" } } } : {})
   } });
