@@ -13,11 +13,9 @@ export const runtime = "nodejs";
 type Row = Awaited<ReturnType<typeof getRows>>[number];
 async function getRows(user: NonNullable<Awaited<ReturnType<typeof requireApiUser>>>, request: NextRequest) {
   const s = request.nextUrl.searchParams;
+  const from=s.get("from")?new Date(`${s.get("from")}T00:00:00Z`):undefined,to=s.get("to")?new Date(`${s.get("to")}T23:59:59Z`):undefined,status=s.get("reviewStatus");
   const where: Prisma.IntelligenceRecordWhereInput = {
-    ...recordScope(user),
-    ...(s.get("type") ? { offerType: s.get("type") as never } : {}),
-    ...(s.get("from") ? { observedAt: { gte: new Date(s.get("from")!) } } : {}),
-    ...(s.get("to") ? { observedAt: { lte: new Date(`${s.get("to")}T23:59:59`) } } : {})
+    ...recordScope(user),...(s.get("type")?{offerType:s.get("type") as any}:{}),...(s.get("wholesaler")?{wholesaler:{contains:s.get("wholesaler")!,mode:"insensitive"}}:{}),...(s.get("laboratory")?{laboratory:{contains:s.get("laboratory")!,mode:"insensitive"}}:{}),...(s.get("region")?{region:s.get("region")!}:{}),...(s.get("wilaya")?{wilaya:s.get("wilaya")!}:{}),...(s.get("userId")?{userId:s.get("userId")!}:{}),...(from||to?{observedAt:{...(from?{gte:from}:{}),...(to?{lte:to}:{})}}:{}),...(s.get("watchTypeId")||s.get("documentType")||status?{document:{...(s.get("watchTypeId")?{watchTypeId:s.get("watchTypeId")!}:{}),...(s.get("documentType")?{documentType:s.get("documentType") as any}:{}),...(status?{reviewStatus:status==="PENDING"?{in:["PENDING","PENDING_AI","NEEDS_REVIEW","MODIFIED"]}:status as any}:{})}}:{})
   };
   return db.intelligenceRecord.findMany({ where, orderBy: { observedAt: "desc" }, take: 50_000, include: { user: { select: { name: true } },document:{select:{watchType:{select:{name:true}}}} } });
 }
