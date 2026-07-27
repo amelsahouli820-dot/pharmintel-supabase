@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle, Languages, GraduationCap, Megaphone } from "lucide-react";
+import { LayoutDashboard, UploadCloud, Database, Sparkles, Bell, Users, Moon, Sun, LogOut, Menu, X, ChevronDown, ShieldCheck, ScrollText, PlusCircle, Trophy, MapPinned, Building2, MessageCircle, Settings, Archive, UserCircle, Languages, GraduationCap, Megaphone, Calculator, Scale } from "lucide-react";
 import { ServiceWorker } from "./ServiceWorker";
 import { LanguageSelector } from "./LanguageSelector";
 
@@ -16,6 +16,8 @@ const links = [
   { href: "/documents", label: "Documents", icon: Database },
   { href: "/nouvelle-information", label: "Nouvelle information", icon: PlusCircle },
   { href: "/veille", label: "Données de veille", icon: Database },
+  { href: "/comparatif-offres", label: "Comparatif des offres", icon: Scale },
+  { href: "/outils-veille", label: "Outils de veille", icon: Calculator },
   { href: "/performances", label: "Performances", icon: Trophy },
   { href: "/croisement", label: "Croisement national", icon: MapPinned },
   { href: "/assistant", label: "Assistant IA", icon: Sparkles },

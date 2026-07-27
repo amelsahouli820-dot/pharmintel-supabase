@@ -3,6 +3,7 @@ import { getFile } from "@/lib/storage";
 import { analyzeDocument, type ExtractedRecord } from "./extraction";
 import type { AlertSeverity, AlertType, Prisma } from "@prisma/client";
 import { linkSignal } from "@/lib/signals";
+import { calculateCommercial } from "@/lib/commercial";
 
 const regionByWilaya: Record<string, string> = {
   "alger": "Centre", "blida": "Centre", "boumerdes": "Centre", "tipaza": "Centre", "bejaia": "Centre", "béjaïa": "Centre", "tizi ouzou": "Centre",
@@ -28,7 +29,7 @@ export async function processDocument(documentId: string) {
   if (!document) throw new Error("Document introuvable");
   await db.document.update({ where: { id: documentId }, data: { status: "PROCESSING", errorMessage: null } });
   const buffer = await getFile(document.storageKey);
-  const context = JSON.stringify({ grossiste: document.wholesaler, typeDocument: document.customDocumentType || document.documentType, dateDocument: document.documentDate?.toISOString().slice(0,10), dateReception: document.receivedAt?.toISOString().slice(0,10), region: document.region, laboratoire: document.laboratory, commentaires: document.comments });
+  const context = JSON.stringify({ grossiste: document.wholesaler, typeDocument: document.customDocumentType || document.documentType, dateDocument: document.documentDate?.toISOString().slice(0,10), dateReception: document.receivedAt?.toISOString().slice(0,10), region: document.region, laboratoire: document.laboratory, commentaires: document.comments, offreCommerciale:document.commercialMetadata });
   const extraction = await analyzeDocument(buffer, document.mimeType, document.originalName, context);
   if (!extraction.records.length) throw new Error("Aucune offre ou information produit n’a été détectée");
   const admins = await db.user.findMany({ where: { role: "ADMIN", status: "ACTIVE" }, select: { id: true } });
@@ -37,6 +38,7 @@ export async function processDocument(documentId: string) {
     await tx.intelligenceRecord.deleteMany({ where: { documentId } });
     for (const item of extraction.records) {
       const existing = await tx.intelligenceRecord.count({ where: { product: { equals: item.product, mode: "insensitive" }, documentId: { not: documentId } } });
+      const pref=(document.commercialMetadata&&typeof document.commercialMetadata==="object"?document.commercialMetadata:{}) as any;const calculated=calculateCommercial({priceHt:item.priceHt??pref.priceHt,discountPercent:item.discountPercent??pref.discountPercent,ugPercent:pref.ugPercent,offerText:item.commercialConditions||pref.offerText,offerBuyQty:pref.offerBuyQty,offerFreeQty:item.freeUnits??pref.offerFreeQty});
       const fallbackOffer = ({ FLASH_SALE:"FLASH_SALE", RESTOCK:"RESTOCK", PROMOTION:"PROMOTION", REBATE:"DISCOUNT", EXCEPTIONAL_DISCOUNT:"DISCOUNT", PRODUCT_LAUNCH:"NEW_PRODUCT", COMMERCIAL_PROPOSAL:"OFFER" } as Record<string,string>)[document.documentType] || "OTHER";
       const data: Prisma.IntelligenceRecordUncheckedCreateInput = {
         documentId, userId: document.userId, observedAt: parsedDate(item.date) || document.documentDate,
@@ -45,7 +47,7 @@ export async function processDocument(documentId: string) {
         productCode: item.productCode, cip: item.cip,
         price: item.price ?? item.promotionalPrice ?? item.priceTtc, priceHt: item.priceHt, priceTtc: item.priceTtc, promotionalPrice: item.promotionalPrice,
         currency: item.currency || "DZD", offerType: item.offerType === "OTHER" ? fallbackOffer as never : item.offerType,
-        discountPercent: item.discountPercent, freeUnits: item.freeUnits, quota: item.quota, commercialConditions: item.commercialConditions,
+        discountPercent: calculated.discountPercent, ugPercent:calculated.ugPercent,freeUnits: calculated.offerFreeQty??item.freeUnits,offerBuyQty:calculated.offerBuyQty,offerFreeQty:calculated.offerFreeQty,offerText:calculated.offerText,netPrice:calculated.netPrice,priceAfterUg:calculated.priceAfterUg,savings:calculated.savings, quota: item.quota, commercialConditions: item.commercialConditions,
         startsAt: parsedDate(item.startDate), endsAt: parsedDate(item.endDate), wilaya: item.wilaya, city: item.city,
         region: item.region || document.region || regionFor(item.wilaya), salesperson: item.salesperson, distributionChannel: item.distributionChannel,
         comments: item.comments, confidence: item.confidence, rawExtraction: item as unknown as Prisma.InputJsonValue
