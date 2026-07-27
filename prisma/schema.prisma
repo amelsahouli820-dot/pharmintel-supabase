@@ -272,6 +272,7 @@ model Document {
   watchTypeId  String?
   watchType    ReferenceEntity?         @relation("DocumentWatchType", fields: [watchTypeId], references: [id], onDelete: SetNull)
   customWatchType String?
+  commercialMetadata Json?
   documentDate DateTime?
   receivedAt   DateTime?
   region       String?
@@ -483,7 +484,14 @@ model IntelligenceRecord {
   currency        String      @default("DZD")
   offerType       OfferType   @default(OTHER)
   discountPercent Decimal?    @db.Decimal(5, 2)
+  ugPercent       Decimal?    @db.Decimal(8, 2)
   freeUnits       Int?
+  offerBuyQty     Int?
+  offerFreeQty    Int?
+  offerText       String?
+  netPrice        Decimal?    @db.Decimal(14, 2)
+  priceAfterUg    Decimal?    @db.Decimal(14, 2)
+  savings         Decimal?    @db.Decimal(14, 2)
   quota           String?
   commercialConditions String? @db.Text
   startsAt        DateTime?
@@ -510,6 +518,8 @@ model IntelligenceRecord {
   @@index([molecule])
   @@index([therapeuticClass])
   @@index([offerType])
+  @@index([discountPercent])
+  @@index([ugPercent])
   @@index([wilaya])
   @@map("intelligence_records")
 }
